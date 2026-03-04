@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { T, STATUS, SOPTS } from "../theme/theme";
 import { Badge, Tag, MachineTag } from "../components/ui";
+import { exportPiquetePDF, exportPiqueteExcel } from "../utils/exportPiquete";
 
 const DashboardView = ({ filtered, analytics, updates, pct, today, persist, history, activeData, search, setSearch }) => {
     const [expanded, setExpanded] = useState({});
@@ -123,7 +124,15 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, hist
                                     )}
                                 </div>
 
-                                <div style={{ display: "flex", gap: 7, flexShrink: 0 }}>
+                                <div style={{ display: "flex", gap: 7, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                                    <button onClick={() => exportPiquetePDF(p, updates)} title="Exportar PDF" style={{
+                                        background: "#1A0808", border: `1px solid ${T.red}`,
+                                        color: "#ff8080", borderRadius: 7, padding: "6px 10px", fontSize: 10, fontWeight: 700
+                                    }}>📄 PDF</button>
+                                    <button onClick={() => exportPiqueteExcel(p, updates)} title="Exportar Excel" style={{
+                                        background: "#0A1F0F", border: "1px solid #166534",
+                                        color: "#22C55E", borderRadius: 7, padding: "6px 10px", fontSize: 10, fontWeight: 700
+                                    }}>📊 Excel</button>
                                     <button onClick={() => openEdit(p)} style={{
                                         background: isEd ? T.red : T.redDark + "33",
                                         border: `1px solid ${T.red}`,
