@@ -247,7 +247,7 @@ export default function App() {
   }, [filtered]);
 
   const analytics = useMemo(() => {
-    const all = activeData;
+    const all = filtered;
     const concl = all.filter(p => updates[p.id]?.status === "CONCLUÍDO").length;
     const prog = all.filter(p => updates[p.id]?.status === "EM PROGRESSO").length;
     const bloq = all.filter(p => updates[p.id]?.status === "BLOQUEADO").length;
@@ -270,7 +270,7 @@ export default function App() {
     const pendPeso = open.reduce((a, p) => a + (p.peso_apto_kg || p.peso_kg || 0), 0);
     const pendPos = open.reduce((a, p) => a + p.items.length, 0);
     return { total: all.length, concl, prog, bloq, agua, open, pendC, pendW, gPend, gMaq, esforco, topPeso, evo, totalPeso, pendPeso, pendPos };
-  }, [updates, history]);
+  }, [updates, history, filtered]);
 
   const openEdit = p => {
     const u = updates[p.id] || {};
@@ -449,7 +449,7 @@ export default function App() {
 
         <div style={{ display: "flex", gap: 0, alignItems: "stretch", background: "rgba(0,0,0,.2)", borderRadius: 10, padding: 2, border: "1px solid rgba(255,255,255,.1)" }}>
           {[
-            { l: "PIQUETES", v: PIQUETES_DATA.length },
+            { l: "PIQUETES", v: analytics.total },
             { l: "CONCLUIDOS", v: analytics.concl },
             { l: "PROGRESSO", v: analytics.prog },
             { l: "PESO TOTAL", v: `${analytics.totalPeso.toFixed(0)}t` },
