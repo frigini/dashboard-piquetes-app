@@ -20,11 +20,22 @@ export default function useAnalytics(filtered, updates, history, pendF, maqF) {
         const all = filtered;
         const mapped = all.map(p => ({ ...p, calcSt: calcStatus(p) }));
 
-        const concl = mapped.filter(p => p.calcSt === "CONCLUÍDO").length;
-        const prog = mapped.filter(p => p.calcSt === "EM PROGRESSO").length;
-        const bloq = mapped.filter(p => p.calcSt === "BLOQUEADO").length;
-        const agua = mapped.filter(p => p.calcSt === "AGUARDANDO").length;
+        const conclArr = mapped.filter(p => p.calcSt === "CONCLUÍDO");
+        const progArr = mapped.filter(p => p.calcSt === "EM PROGRESSO");
+        const bloqArr = mapped.filter(p => p.calcSt === "BLOQUEADO");
+        const aguaArr = mapped.filter(p => p.calcSt === "AGUARDANDO");
+        const concl = conclArr.length;
+        const prog = progArr.length;
+        const bloq = bloqArr.length;
+        const agua = aguaArr.length;
         const open = mapped.filter(p => p.calcSt !== "CONCLUÍDO");
+
+        // Peso por status
+        const pesoPorStatus = (arr) => arr.reduce((a, p) => a + (p.peso_apto_kg || p.peso_kg || 0), 0);
+        const conclPeso = pesoPorStatus(conclArr);
+        const progPeso = pesoPorStatus(progArr);
+        const bloqPeso = pesoPorStatus(bloqArr);
+        const aguaPeso = pesoPorStatus(aguaArr);
 
         const pendC = {}, pendW = {}, maqC = {};
         let pendPeso = 0;
@@ -109,6 +120,6 @@ export default function useAnalytics(filtered, updates, history, pendF, maqF) {
         const evo = evoKeys.map(d => { cum += dayMap[d]; return { d, v: cum }; });
 
         const totalPeso = all.reduce((a, p) => a + (p.peso_apto_kg || p.peso_kg || 0), 0);
-        return { total: all.length, concl, prog, bloq, agua, open, pendC, pendW, gPend, gMaq, esforco, topPeso, evo, totalPeso, pendPeso, pendPos };
+        return { total: all.length, concl, prog, bloq, agua, conclPeso, progPeso, bloqPeso, aguaPeso, open, pendC, pendW, gPend, gMaq, esforco, topPeso, evo, totalPeso, pendPeso, pendPos };
     }, [updates, history, filtered, pendF, maqF]);
 }

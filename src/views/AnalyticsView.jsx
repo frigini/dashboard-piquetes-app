@@ -70,22 +70,22 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                         />
                         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                             <div style={{ fontSize: 24, fontWeight: 900, color: "#fff" }}>{analytics.total}</div>
-                            <div style={{ fontSize: 9, color: T.sub, letterSpacing: 1 }}>total</div>
+                            <div style={{ fontSize: 9, color: T.sub, letterSpacing: 1 }}>{analytics.totalPeso.toFixed(0)}t</div>
                         </div>
                     </div>
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
                         {[
-                            { l: "Concluido", v: analytics.concl, c: "#22C55E" },
-                            { l: "Em Progresso", v: analytics.prog, c: "#3B82F6" },
-                            { l: "Bloqueado", v: analytics.bloq, c: T.red },
-                            { l: "Aguardando", v: analytics.agua, c: "#F59E0B" }
+                            { l: "Concluido", v: analytics.concl, w: analytics.conclPeso, c: "#22C55E" },
+                            { l: "Em Progresso", v: analytics.prog, w: analytics.progPeso, c: "#3B82F6" },
+                            { l: "Bloqueado", v: analytics.bloq, w: analytics.bloqPeso, c: T.red },
+                            { l: "Aguardando", v: analytics.agua, w: analytics.aguaPeso, c: "#F59E0B" }
                         ].map(st => (
                             <div key={st.l} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: st.c }} />
                                     <div style={{ fontSize: 11, color: T.text, fontWeight: 500 }}>{st.l}</div>
                                 </div>
-                                <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{st.v} <span style={{ fontSize: 10, color: T.dim, fontWeight: 400 }}>({analytics.total > 0 ? Math.round(st.v / analytics.total * 100) : 0}%)</span></div>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{st.v} - {st.w.toFixed(1)}t <span style={{ fontSize: 10, color: T.dim, fontWeight: 400 }}>({analytics.total > 0 ? Math.round(st.v / analytics.total * 100) : 0}%)</span></div>
                             </div>
                         ))}
                     </div>
