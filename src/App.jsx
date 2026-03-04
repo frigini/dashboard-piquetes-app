@@ -243,8 +243,14 @@ export default function App() {
   }), [sheetF, pendF, maqF, search]);
 
   const pendSum = useMemo(() => {
-    const c = {}; filtered.forEach(p => p.pendencias.forEach(x => { c[x] = (c[x] || 0) + 1; })); return c;
-  }, [filtered]);
+    const c = {};
+    activeData.forEach(p => {
+      (p.items || p.itens || []).forEach(i => {
+        if (i.pendencia) c[i.pendencia] = (c[i.pendencia] || 0) + 1;
+      });
+    });
+    return c;
+  }, [activeData]);
 
   const analytics = useMemo(() => {
     const all = filtered;
@@ -254,23 +260,59 @@ export default function App() {
     const agua = all.length - concl - prog - bloq;
     const open = all.filter(p => updates[p.id]?.status !== "CONCLUÍDO");
     const pendC = {}, pendW = {}, maqC = {};
+    let pendPeso = 0;
+    let pendPos = 0;
+
     open.forEach(p => {
-      p.pendencias.forEach(x => { pendC[x] = (pendC[x] || 0) + 1; pendW[x] = (pendW[x] || 0) + p.peso_apto_kg; });
-      p.maquinas.forEach(m => { maqC[m] = (maqC[m] || 0) + 1; });
+      let items = p.items || p.itens || [];
+      if (items.length === 0) {
+        // Fallback for piquetes missing items details (e.g. summarized data)
+        const matchPend = !pendF || p.pendencias.includes(pendF);
+        const matchMaq = !maqF || p.maquinas.includes(maqF);
+        if (matchPend && matchMaq) {
+          pendPeso += (p.peso_apto_kg || p.peso_kg || 0);
+          pendPos += p.pendencias.length; // rough estimate
+        }
+        p.pendencias.forEach(x => {
+          if (!pendF || x === pendF) {
+            pendC[x] = (pendC[x] || 0) + 1;
+            pendW[x] = (pendW[x] || 0) + (p.peso_apto_kg || p.peso_kg || 0);
+          }
+        });
+        p.maquinas.forEach(m => {
+          if (!maqF || m === maqF) maqC[m] = (maqC[m] || 0) + 1;
+        });
+        return;
+      }
+
+      items.forEach(i => {
+        const matchPend = !pendF || i.pendencia === pendF;
+        const matchMaq = !maqF || i.maq === maqF;
+        if (matchPend && matchMaq) {
+          pendPeso += (i.peso || 0);
+          pendPos += 1;
+          if (i.pendencia) {
+            pendC[i.pendencia] = (pendC[i.pendencia] || 0) + 1;
+            pendW[i.pendencia] = (pendW[i.pendencia] || 0) + (i.peso || 0);
+          }
+          if (i.maq) {
+            maqC[i.maq] = (maqC[i.maq] || 0) + 1;
+          }
+        }
+      });
     });
+
     const gPend = Object.entries(pendC).sort((a, b) => b[1] - a[1]);
     const gMaq = Object.entries(maqC).sort((a, b) => b[1] - a[1]).slice(0, 10);
     const esforco = open.map(p => ({ ...p, score: (p.peso_apto_kg || p.peso_kg || 0) / Math.max((p.items || p.itens || []).length, 1), pos: (p.items || p.itens || []).length })).sort((a, b) => b.score - a.score).slice(0, 10);
     const topPeso = [...open].sort((a, b) => (b.peso_apto_kg || b.peso_kg || 0) - (a.peso_apto_kg || a.peso_kg || 0)).slice(0, 10);
     const dayMap = {};
     history.forEach(e => { if (e.changes?.status === "CONCLUÍDO") dayMap[e.date] = (dayMap[e.date] || 0) + 1; });
-    const evoKeys = Object.keys(dayMap).sort((a, b) => { const pa = a.split("/"), pb = b.split("/"); return new Date(`${pa[2]}-${pa[1]}-${pa[0]}`) - new Date(`${pb[2]}-${pb[1]}-${pb[0]}`); });
+    const evoKeys = Object.keys(dayMap).sort((a, b) => { const pa = a.split("/"); const pb = b.split("/"); return new Date(`${pa[2]}-${pa[1]}-${pa[0]}`) - new Date(`${pb[2]}-${pb[1]}-${pb[0]}`); });
     let cum = 0; const evo = evoKeys.map(d => { cum += dayMap[d]; return { d, v: cum }; });
     const totalPeso = all.reduce((a, p) => a + (p.peso_apto_kg || p.peso_kg || 0), 0);
-    const pendPeso = open.reduce((a, p) => a + (p.peso_apto_kg || p.peso_kg || 0), 0);
-    const pendPos = open.reduce((a, p) => a + p.items.length, 0);
     return { total: all.length, concl, prog, bloq, agua, open, pendC, pendW, gPend, gMaq, esforco, topPeso, evo, totalPeso, pendPeso, pendPos };
-  }, [updates, history, filtered]);
+  }, [updates, history, filtered, pendF, maqF]);
 
   const openEdit = p => {
     const u = updates[p.id] || {};
