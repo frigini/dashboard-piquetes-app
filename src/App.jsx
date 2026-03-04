@@ -60,7 +60,8 @@ export default function App() {
             <ImportView
               importedData={data.importedData} importStatus={data.importStatus}
               importDragging={data.importDragging} setImportDragging={data.setImportDragging}
-              processFile={data.processFile} confirmImport={data.confirmImport} setView={setView}
+              processFile={data.processFile} confirmImport={data.confirmImport}
+              cancelImport={data.cancelImport} setView={setView}
             />
           )}
 

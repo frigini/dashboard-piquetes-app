@@ -1,7 +1,7 @@
 import { T } from "../theme/theme";
 import { Tag } from "../components/ui";
 
-const ImportView = ({ importedData, importStatus, importDragging, setImportDragging, processFile, confirmImport, setView }) => (
+const ImportView = ({ importedData, importStatus, importDragging, setImportDragging, processFile, confirmImport, cancelImport, setView }) => (
     <div style={{ padding: "24px 28px" }}>
         <div style={{ fontSize: 10, color: T.dim, letterSpacing: 4, marginBottom: 20 }}>IMPORTAR PLANILHA</div>
 
@@ -36,9 +36,14 @@ const ImportView = ({ importedData, importStatus, importDragging, setImportDragg
                         <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{importedData.length} piquetes lidos</div>
                         <div style={{ fontSize: 10, color: T.dim, marginTop: 2 }}>{importedData.filter(p => p.pendencias?.length > 0).length} com pendencias · {importedData.reduce((a, p) => a + p.peso_kg, 0).toFixed(1)}t total</div>
                     </div>
-                    <button onClick={() => confirmImport(setView)} style={{ background: T.red, border: "none", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>
-                        ✓ USAR ESSES DADOS NO DASHBOARD
-                    </button>
+                    <div style={{ display: "flex", gap: 12 }}>
+                        <button onClick={cancelImport} style={{ background: "transparent", border: `1px solid ${T.border}`, color: T.text, borderRadius: 8, padding: "10px 16px", fontSize: 12, fontWeight: 600 }}>
+                            DESCARTAR
+                        </button>
+                        <button onClick={() => confirmImport(setView)} style={{ background: T.red, border: "none", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>
+                            ✓ USAR ESSES DADOS NO DASHBOARD
+                        </button>
+                    </div>
                 </div>
                 <div style={{ maxHeight: 300, overflowY: "auto" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10 }}>
