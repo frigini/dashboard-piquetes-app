@@ -45,30 +45,32 @@ export default function useAnalytics(filtered, updates, history, pendF, maqF) {
             }
 
             // Distribute stats for charts
+            // 1. Count unique piquetes per pendencia and maquina
+            p.pendencias.forEach(x => {
+                if (!pendF || pendF === "TODAS" || x === pendF) {
+                    pendC[x] = (pendC[x] || 0) + 1;
+                }
+            });
+            p.maquinas.forEach(m => {
+                if (!maqF || maqF === "TODAS" || m === maqF) {
+                    maqC[m] = (maqC[m] || 0) + 1;
+                }
+            });
+
+            // 2. Accurately distribute weights based on items
             if (items.length === 0) {
                 p.pendencias.forEach(x => {
                     if (!pendF || pendF === "TODAS" || x === pendF) {
-                        pendC[x] = (pendC[x] || 0) + 1;
                         pendW[x] = (pendW[x] || 0) + pWeight;
                     }
-                });
-                p.maquinas.forEach(m => {
-                    if (!maqF || maqF === "TODAS" || m === maqF) maqC[m] = (maqC[m] || 0) + 1;
                 });
             } else {
                 items.forEach(i => {
                     if (!pendF || pendF === "TODAS" || i.pendencia === pendF) {
                         if (i.pendencia) {
-                            pendC[i.pendencia] = (pendC[i.pendencia] || 0) + 1;
-                            // For pendW, we use pWeight if i.peso seems inconsistent, 
-                            // but usually pendW is a breakdown. Assuming i.peso is the contribution.
-                            // However, if i.peso is scaled differently, it's better to use pWeight / items.length
-                            const iWeight = i.peso > 0 ? i.peso : (pWeight / items.length);
+                            const iWeight = i.peso > 0 ? (i.peso / 1000) : (pWeight / items.length);
                             pendW[i.pendencia] = (pendW[i.pendencia] || 0) + iWeight;
                         }
-                    }
-                    if (!maqF || maqF === "TODAS" || i.maq === maqF) {
-                        if (i.maq) maqC[i.maq] = (maqC[i.maq] || 0) + 1;
                     }
                 });
             }
