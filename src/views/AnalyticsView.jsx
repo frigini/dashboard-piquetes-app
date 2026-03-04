@@ -1,5 +1,5 @@
 import { T, PEND, DP, MAQ_COLORS } from "../theme/theme";
-import { Badge, Tag, Ring } from "../components/ui";
+import { Badge, Tag, Ring, Donut } from "../components/ui";
 import { HBar, LineChart } from "../components/charts";
 
 const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, setActMaq, setPendF, setMaqF, setView }) => (
@@ -55,26 +55,37 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
             {/* Donut status */}
             <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: "18px 20px" }}>
                 <div style={{ fontSize: 10, color: T.sub, letterSpacing: 3, marginBottom: 16 }}>DISTRIBUICAO STATUS</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
                     <div style={{ position: "relative", flexShrink: 0 }}>
-                        <Ring pct={pct} size={110} stroke={12} color="#22C55E" bg={T.muted} />
+                        <Donut
+                            data={[
+                                { pct: analytics.total > 0 ? (analytics.concl / analytics.total * 100) : 0, color: "#22C55E" },
+                                { pct: analytics.total > 0 ? (analytics.prog / analytics.total * 100) : 0, color: "#3B82F6" },
+                                { pct: analytics.total > 0 ? (analytics.bloq / analytics.total * 100) : 0, color: T.red },
+                                { pct: analytics.total > 0 ? (analytics.agua / analytics.total * 100) : 0, color: "#F59E0B" },
+                            ]}
+                            size={120}
+                            stroke={14}
+                            bg={T.muted}
+                        />
                         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                            <div style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>{analytics.concl}</div>
-                            <div style={{ fontSize: 8, color: T.sub, letterSpacing: 1 }}>concl.</div>
+                            <div style={{ fontSize: 24, fontWeight: 900, color: "#fff" }}>{analytics.total}</div>
+                            <div style={{ fontSize: 9, color: T.sub, letterSpacing: 1 }}>total</div>
                         </div>
                     </div>
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
                         {[
-                            ["Concluidos", analytics.concl, "#22C55E"],
-                            ["Progresso", analytics.prog, "#3B82F6"],
-                            ["Bloqueados", analytics.bloq, T.red],
-                            ["Aguardando", analytics.agua, "#F59E0B"],
-                        ].map(([l, v, c]) => (
-                            <div key={l} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                <div style={{ width: 8, height: 8, borderRadius: 2, background: c, flexShrink: 0 }} />
-                                <div style={{ flex: 1, fontSize: 10, color: T.sub }}>{l}</div>
-                                <div style={{ fontSize: 13, fontWeight: 700, color: c }}>{v}</div>
-                                <div style={{ fontSize: 9, color: T.dim, width: 28, textAlign: "right" }}>{analytics.total > 0 ? Math.round(v / analytics.total * 100) : 0}%</div>
+                            { l: "Concluido", v: analytics.concl, c: "#22C55E" },
+                            { l: "Em Progresso", v: analytics.prog, c: "#3B82F6" },
+                            { l: "Bloqueado", v: analytics.bloq, c: T.red },
+                            { l: "Aguardando", v: analytics.agua, c: "#F59E0B" }
+                        ].map(st => (
+                            <div key={st.l} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: st.c }} />
+                                    <div style={{ fontSize: 11, color: T.text, fontWeight: 500 }}>{st.l}</div>
+                                </div>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{st.v} <span style={{ fontSize: 10, color: T.dim, fontWeight: 400 }}>({analytics.total > 0 ? Math.round(st.v / analytics.total * 100) : 0}%)</span></div>
                             </div>
                         ))}
                     </div>
