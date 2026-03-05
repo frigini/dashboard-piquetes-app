@@ -14,7 +14,7 @@ export default function useAnalytics(filtered, updates, history, pendF, maqF) {
             const sit = (p.situacao || "").toUpperCase();
             if (op === "ENCERRADO" || sit === "FINALIZADO" || sit === "ENCER") return "CONCLUÍDO";
             if (p.pendencias && p.pendencias.length > 0) return "EM PROGRESSO";
-            return "AGUARDANDO";
+            return "EM PROGRESSO";
         };
 
         const all = filtered;
@@ -22,20 +22,14 @@ export default function useAnalytics(filtered, updates, history, pendF, maqF) {
 
         const conclArr = mapped.filter(p => p.calcSt === "CONCLUÍDO");
         const progArr = mapped.filter(p => p.calcSt === "EM PROGRESSO");
-        const bloqArr = mapped.filter(p => p.calcSt === "BLOQUEADO");
-        const aguaArr = mapped.filter(p => p.calcSt === "AGUARDANDO");
         const concl = conclArr.length;
         const prog = progArr.length;
-        const bloq = bloqArr.length;
-        const agua = aguaArr.length;
         const open = mapped.filter(p => p.calcSt !== "CONCLUÍDO");
 
         // Peso por status
         const pesoPorStatus = (arr) => arr.reduce((a, p) => a + (p.peso_apto_kg || p.peso_kg || 0), 0);
         const conclPeso = pesoPorStatus(conclArr);
         const progPeso = pesoPorStatus(progArr);
-        const bloqPeso = pesoPorStatus(bloqArr);
-        const aguaPeso = pesoPorStatus(aguaArr);
 
         const pendC = {}, pendW = {}, maqC = {};
         let pendPeso = 0;
@@ -45,8 +39,6 @@ export default function useAnalytics(filtered, updates, history, pendF, maqF) {
             const pWeight = (p.peso_apto_kg || p.peso_kg || 0);
             const items = p.items || p.itens || [];
 
-            // Check if piquete matches filters
-            const matchesAba = !pendF || pendF === "TODAS" || p.pendencias.includes(pendF); // Note: ABA is already handled by 'filtered' prop
             const matchesPend = !pendF || pendF === "TODAS" || p.pendencias.includes(pendF);
             const matchesMaq = !maqF || maqF === "TODAS" || p.maquinas.includes(maqF);
 
@@ -55,8 +47,7 @@ export default function useAnalytics(filtered, updates, history, pendF, maqF) {
                 pendPos += Math.max(items.length, p.pendencias.length, 1);
             }
 
-            // Distribute stats for charts
-            // 1. Count unique piquetes per pendencia and maquina
+            // Count unique piquetes per pendencia and maquina
             p.pendencias.forEach(x => {
                 if (!pendF || pendF === "TODAS" || x === pendF) {
                     pendC[x] = (pendC[x] || 0) + 1;
@@ -68,7 +59,7 @@ export default function useAnalytics(filtered, updates, history, pendF, maqF) {
                 }
             });
 
-            // 2. Accurately distribute weights based on items
+            // Distribute weights based on items
             if (items.length === 0) {
                 p.pendencias.forEach(x => {
                     if (!pendF || pendF === "TODAS" || x === pendF) {
@@ -89,14 +80,13 @@ export default function useAnalytics(filtered, updates, history, pendF, maqF) {
 
         const gPend = Object.entries(pendC).sort((a, b) => b[1] - a[1]);
         const gMaq = Object.entries(maqC).sort((a, b) => b[1] - a[1]).slice(0, 10);
-        const esforco = open.map(p => ({ ...p, score: (p.peso_apto_kg || p.peso_kg || 0) / Math.max((p.items || p.itens || []).length, 1), pos: (p.items || p.itens || []).length })).sort((a, b) => b.score - a.score).slice(0, 10);
+        const esforco = all.map(p => ({ ...p, score: (p.peso_apto_kg || p.peso_kg || 0) / Math.max((p.items || p.itens || []).length, 1), pos: (p.items || p.itens || []).length })).sort((a, b) => b.score - a.score).slice(0, 10);
         const topPeso = [...open].sort((a, b) => (b.peso_apto_kg || b.peso_kg || 0) - (a.peso_apto_kg || a.peso_kg || 0)).slice(0, 10);
 
-        // Evolução de Conclusões: Cruza Data Contratual (quando aplicável) e as Atualizações
+        // Evolução de Conclusões
         const dayMap = {};
         mapped.forEach(p => {
             if (p.calcSt === "CONCLUÍDO") {
-                // Se foi atualizado no history do usuário, usa essa data, senão usa a contratual ou 'Anterior'
                 const userHist = history.slice().reverse().find(e => e.id === p.id && e.changes?.status === "CONCLUÍDO");
                 if (userHist) {
                     dayMap[userHist.date] = (dayMap[userHist.date] || 0) + 1;
@@ -120,6 +110,6 @@ export default function useAnalytics(filtered, updates, history, pendF, maqF) {
         const evo = evoKeys.map(d => { cum += dayMap[d]; return { d, v: cum }; });
 
         const totalPeso = all.reduce((a, p) => a + (p.peso_apto_kg || p.peso_kg || 0), 0);
-        return { total: all.length, concl, prog, bloq, agua, conclPeso, progPeso, bloqPeso, aguaPeso, open, pendC, pendW, gPend, gMaq, esforco, topPeso, evo, totalPeso, pendPeso, pendPos };
+        return { total: all.length, concl, prog, conclPeso, progPeso, open, pendC, pendW, gPend, gMaq, esforco, topPeso, evo, totalPeso, pendPeso, pendPos };
     }, [updates, history, filtered, pendF, maqF]);
 }

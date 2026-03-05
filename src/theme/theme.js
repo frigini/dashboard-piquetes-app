@@ -17,10 +17,8 @@ export const T = {
 export const STATUS = {
     "CONCLUÍDO": { bg: "#0A1F0F", fg: "#22C55E", border: "#166534", glow: "#22C55E33" },
     "EM PROGRESSO": { bg: "#0A1628", fg: "#3B82F6", border: "#1E40AF", glow: "#3B82F633" },
-    "BLOQUEADO": { bg: "#1A0808", fg: "#EF4444", border: "#991B1B", glow: "#EF444433" },
-    "AGUARDANDO": { bg: "#1A1400", fg: "#F59E0B", border: "#92400E", glow: "#F59E0B33" },
 };
-export const SOPTS = ["AGUARDANDO", "EM PROGRESSO", "CONCLUÍDO", "BLOQUEADO"];
+export const SOPTS = ["EM PROGRESSO", "CONCLUÍDO"];
 
 export const PEND = {
     CORTE: { bg: "#071420", fg: "#38BDF8", bd: "#0369A1" },

@@ -31,8 +31,6 @@ export default function App() {
         .pcard:hover{transform:translateY(-1px);box-shadow:0 6px 24px #00000066}
         .hbtn:hover{background:#1E1E1E!important;color:#F0F0F0!important}
         .row:hover{background:#1A1A1A!important}
-        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-        .pulse{animation:pulse 2s infinite}
       `}</style>
 
       <Header analytics={analytics} pct={pct} today={data.today} timeStr={data.timeStr} />
@@ -41,7 +39,6 @@ export default function App() {
         <Sidebar
           view={view} setView={setView}
           activeData={data.activeData} filtered={filters.filtered}
-          sheetF={filters.sheetF} setSheetF={filters.setSheetF} sheets={filters.sheets}
           pendF={filters.pendF} setPendF={filters.setPendF} allPends={filters.allPends} pendSum={filters.pendSum}
           maqF={filters.maqF} setMaqF={filters.setMaqF} allMaqs={filters.allMaqs}
         />

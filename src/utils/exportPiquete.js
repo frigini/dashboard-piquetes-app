@@ -2,13 +2,238 @@ import { jsPDF } from "jspdf";
 import * as XLSX from "xlsx";
 
 /**
+ * Exporta toda a Analise Operacional para PDF.
+ * Inclui: resumo de status, metricas de peso, gargalos, rankings.
+ */
+export function exportAnalyticsPDF(analytics, pct) {
+    try {
+        const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
+        let y = 14;
+
+        const checkPage = (needed) => {
+            if (y + needed > pageH - 10) { doc.addPage(); y = 14; }
+        };
+
+        // ─── TITULO ───
+        doc.setFillColor(232, 0, 29);
+        doc.rect(0, 0, pageW, 20, "F");
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(255, 255, 255);
+        doc.text("BRAMETAL - ANALISE OPERACIONAL", 14, 13);
+        doc.setFontSize(9);
+        doc.text(new Date().toLocaleDateString("pt-BR") + " " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }), pageW - 14, 13, { align: "right" });
+        y = 28;
+
+        // ─── RESUMO DE STATUS ───
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("RESUMO GERAL", 14, y); y += 8;
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        const resumo = [
+            ["Total de Piquetes", String(analytics.total)],
+            ["Concluidos", `${analytics.concl} (${pct}%)`],
+            ["Em Progresso", String(analytics.prog)],
+            ["Peso Total", `${analytics.totalPeso.toFixed(1)} t`],
+            ["Peso Concluido", `${analytics.conclPeso.toFixed(1)} t`],
+            ["Peso Em Progresso", `${analytics.progPeso.toFixed(1)} t`],
+            ["Peso Pendente", `${analytics.pendPeso.toFixed(1)} t`],
+            ["Posicoes Abertas", `${analytics.pendPos} em ${analytics.open.length} piquetes`],
+            ["Avanco Geral", `${pct}%`],
+        ];
+
+        // Tabela resumo
+        const colW1 = 70, colW2 = 80;
+        doc.setFillColor(240, 240, 240);
+        resumo.forEach((row, i) => {
+            if (i % 2 === 0) doc.rect(14, y - 4, colW1 + colW2, 6, "F");
+            doc.setFont("helvetica", "bold");
+            doc.text(row[0], 16, y);
+            doc.setFont("helvetica", "normal");
+            doc.text(row[1], 16 + colW1, y);
+            y += 6;
+        });
+        y += 6;
+
+        // ─── GARGALOS POR PENDENCIA ───
+        checkPage(30);
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("GARGALOS POR PENDENCIA", 14, y); y += 8;
+
+        const pendHeaders = ["PENDENCIA", "PIQUETES", "PESO (t)", "%"];
+        const pendColW = [60, 25, 30, 20];
+        doc.setFillColor(232, 0, 29);
+        doc.rect(14, y - 4, pendColW.reduce((a, b) => a + b, 0), 6, "F");
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(255, 255, 255);
+        let x = 14;
+        pendHeaders.forEach((h, i) => { doc.text(h, x + 1, y); x += pendColW[i]; });
+        y += 6;
+        doc.setTextColor(0, 0, 0);
+        doc.setFont("helvetica", "normal");
+
+        analytics.gPend.forEach(([k, v], idx) => {
+            checkPage(6);
+            if (idx % 2 === 0) {
+                doc.setFillColor(248, 248, 248);
+                doc.rect(14, y - 4, pendColW.reduce((a, b) => a + b, 0), 6, "F");
+            }
+            x = 14;
+            doc.text(String(k), x + 1, y); x += pendColW[0];
+            doc.text(String(v), x + 1, y); x += pendColW[1];
+            doc.text((analytics.pendW[k] || 0).toFixed(1), x + 1, y); x += pendColW[2];
+            doc.text(`${analytics.open.length > 0 ? Math.round(v / analytics.open.length * 100) : 0}%`, x + 1, y);
+            y += 6;
+        });
+        y += 6;
+
+        // ─── GARGALOS POR MAQUINA ───
+        checkPage(30);
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("GARGALOS POR MAQUINA", 14, y); y += 8;
+
+        const maqHeaders = ["MAQUINA", "PIQUETES"];
+        const maqColW = [60, 25];
+        doc.setFillColor(232, 0, 29);
+        doc.rect(14, y - 4, maqColW.reduce((a, b) => a + b, 0), 6, "F");
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(255, 255, 255);
+        x = 14;
+        maqHeaders.forEach((h, i) => { doc.text(h, x + 1, y); x += maqColW[i]; });
+        y += 6;
+        doc.setTextColor(0, 0, 0);
+        doc.setFont("helvetica", "normal");
+
+        analytics.gMaq.forEach(([k, v], idx) => {
+            checkPage(6);
+            if (idx % 2 === 0) {
+                doc.setFillColor(248, 248, 248);
+                doc.rect(14, y - 4, maqColW.reduce((a, b) => a + b, 0), 6, "F");
+            }
+            x = 14;
+            doc.text(String(k), x + 1, y); x += maqColW[0];
+            doc.text(String(v), x + 1, y);
+            y += 6;
+        });
+        y += 6;
+
+        // ─── MENOR ESFORCO / MAIOR RETORNO ───
+        checkPage(30);
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("MENOR ESFORCO / MAIOR RETORNO (Top 10)", 14, y); y += 8;
+
+        const esfHeaders = ["#", "CT", "PIQUETE", "POS", "PESO (t)", "ROI t/pos", "PENDENCIAS"];
+        const esfColW = [10, 18, 60, 15, 22, 22, 80];
+        doc.setFillColor(232, 0, 29);
+        doc.rect(14, y - 4, esfColW.reduce((a, b) => a + b, 0), 6, "F");
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(255, 255, 255);
+        x = 14;
+        esfHeaders.forEach((h, i) => { doc.text(h, x + 1, y); x += esfColW[i]; });
+        y += 6;
+        doc.setTextColor(0, 0, 0);
+        doc.setFont("helvetica", "normal");
+
+        analytics.esforco.forEach((p, i) => {
+            checkPage(6);
+            if (i % 2 === 0) {
+                doc.setFillColor(248, 248, 248);
+                doc.rect(14, y - 4, esfColW.reduce((a, b) => a + b, 0), 6, "F");
+            }
+            x = 14;
+            const row = [
+                `${i + 1}`,
+                String(p.ct || ""),
+                String(p.piquete || "").slice(0, 35),
+                String(p.pos || 0),
+                (p.peso_apto_kg || p.peso_kg || 0).toFixed(2),
+                p.score.toFixed(2),
+                (p.pendencias || []).join(", "),
+            ];
+            row.forEach((cell, ci) => {
+                doc.text(String(cell).slice(0, 45), x + 1, y);
+                x += esfColW[ci];
+            });
+            y += 6;
+        });
+        y += 6;
+
+        // ─── TOP PESO PENDENTE ───
+        checkPage(30);
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("TOP PESO PENDENTE (Top 10)", 14, y); y += 8;
+
+        const topHeaders = ["#", "CT", "PESO (t)", "POSICOES", "PENDENCIAS"];
+        const topColW = [10, 18, 25, 20, 100];
+        doc.setFillColor(232, 0, 29);
+        doc.rect(14, y - 4, topColW.reduce((a, b) => a + b, 0), 6, "F");
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(255, 255, 255);
+        x = 14;
+        topHeaders.forEach((h, i) => { doc.text(h, x + 1, y); x += topColW[i]; });
+        y += 6;
+        doc.setTextColor(0, 0, 0);
+        doc.setFont("helvetica", "normal");
+
+        analytics.topPeso.forEach((p, i) => {
+            checkPage(6);
+            if (i % 2 === 0) {
+                doc.setFillColor(248, 248, 248);
+                doc.rect(14, y - 4, topColW.reduce((a, b) => a + b, 0), 6, "F");
+            }
+            x = 14;
+            const row = [
+                `${i + 1}`,
+                String(p.ct || ""),
+                (p.peso_apto_kg || p.peso_kg || 0).toFixed(2),
+                String((p.items || p.itens || []).length),
+                (p.pendencias || []).join(", "),
+            ];
+            row.forEach((cell, ci) => {
+                doc.text(String(cell).slice(0, 55), x + 1, y);
+                x += topColW[ci];
+            });
+            y += 6;
+        });
+
+        // Rodape
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            doc.setFontSize(7);
+            doc.setTextColor(150, 150, 150);
+            doc.text(`Brametal - Analise Operacional - Pagina ${i}/${totalPages}`, pageW / 2, pageH - 5, { align: "center" });
+        }
+
+        doc.save("Analise_Operacional_" + new Date().toISOString().slice(0, 10) + ".pdf");
+    } catch (err) {
+        console.error("Erro ao exportar Analise PDF:", err);
+        alert("Erro ao gerar PDF: " + err.message);
+    }
+}
+
+
+/**
  * Exporta os dados de um piquete individual para PDF.
  * Gera um arquivo com cabecalho, resumo e tabela de itens.
  * Desenha a tabela manualmente sem dependencia de jspdf-autotable.
  */
 export function exportPiquetePDF(p, updates) {
     try {
-        const u = updates[p.id] || {};
+        const u = (updates || {})[p.id] || {};
         const items = p.items || p.itens || [];
         const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
         const pageW = doc.internal.pageSize.getWidth();
@@ -27,10 +252,7 @@ export function exportPiquetePDF(p, updates) {
             "Peso: " + peso + " t",
             "Pendencias: " + (p.pendencias && p.pendencias.length > 0 ? p.pendencias.join(", ") : "-"),
             "Maquinas: " + (p.maquinas && p.maquinas.length > 0 ? p.maquinas.join(", ") : "-"),
-            "Status: " + (u.status || "AGUARDANDO"),
         ];
-        if (u.responsavel) linhas.push("Responsavel: " + u.responsavel);
-        if (u.obs) linhas.push("Obs: " + u.obs);
 
         let y = 26;
         linhas.forEach(l => { doc.text(String(l), 14, y); y += 5; });
@@ -113,7 +335,7 @@ export function exportPiquetePDF(p, updates) {
  */
 export function exportPiqueteExcel(p, updates) {
     try {
-        const u = updates[p.id] || {};
+        const u = (updates || {})[p.id] || {};
         const items = p.items || p.itens || [];
         const wb = XLSX.utils.book_new();
 
@@ -124,9 +346,6 @@ export function exportPiqueteExcel(p, updates) {
             ["Peso (t)", (p.peso_apto_kg || p.peso_kg || 0).toFixed(2)],
             ["Pendencias", p.pendencias && p.pendencias.length > 0 ? p.pendencias.join(", ") : "-"],
             ["Maquinas", p.maquinas && p.maquinas.length > 0 ? p.maquinas.join(", ") : "-"],
-            ["Status", u.status || "AGUARDANDO"],
-            ["Responsavel", u.responsavel || ""],
-            ["Observacao", u.obs || ""],
         ];
         const wsResumo = XLSX.utils.aoa_to_sheet(resumo);
         wsResumo["!cols"] = [{ wch: 14 }, { wch: 50 }];

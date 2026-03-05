@@ -1,25 +1,10 @@
 import { useState } from "react";
-import { T, STATUS, SOPTS } from "../theme/theme";
+import { T, STATUS } from "../theme/theme";
 import { Badge, Tag, MachineTag } from "../components/ui";
 import { exportPiquetePDF, exportPiqueteExcel } from "../utils/exportPiquete";
 
 const DashboardView = ({ filtered, analytics, updates, pct, today, persist, history, activeData, search, setSearch }) => {
     const [expanded, setExpanded] = useState({});
-    const [editId, setEditId] = useState(null);
-    const [editForm, setEditForm] = useState({});
-
-    const openEdit = p => {
-        const u = updates[p.id] || {};
-        setEditForm({ status: u.status || "AGUARDANDO", obs: u.obs || "", pesoRealizado: u.pesoRealizado || "", responsavel: u.responsavel || "" });
-        setEditId(editId === p.id ? null : p.id);
-    };
-
-    const saveEdit = piq => {
-        const newU = { ...updates, [piq.id]: { ...(updates[piq.id] || {}), ...editForm, updatedAt: today } };
-        const entry = { date: today, time: new Date().toLocaleTimeString("pt-BR"), piqueteId: piq.id, piquete: piq.piquete, ct: piq.ct, changes: { ...editForm } };
-        persist(newU, [entry, ...history].slice(0, 300));
-        setEditId(null);
-    };
 
     return (
         <div>
@@ -29,9 +14,9 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, hist
                     {[
                         { l: "TOTAL", v: analytics.total, c: T.text },
                         { l: "CONCLUIDOS", v: analytics.concl, c: "#22C55E" },
-                        { l: "PROGRESSO", v: analytics.prog, c: "#3B82F6" },
-                        { l: "BLOQUEADOS", v: analytics.bloq, c: T.red },
+                        { l: "EM PROGRESSO", v: analytics.prog, c: "#3B82F6" },
                         { l: "PESO TOTAL", v: `${(analytics.totalPeso || 0).toFixed(0)}t`, c: "#A78BFA" },
+                        { l: "AVANCO", v: `${pct}%`, c: "#22C55E" },
                     ].map(({ l, v, c }) => (
                         <div key={l} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 9, padding: "10px 14px", position: "relative", overflow: "hidden" }}>
                             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: c }} />
@@ -46,7 +31,6 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, hist
                         {[
                             { v: analytics.concl, c: "#22C55E" },
                             { v: analytics.prog, c: "#3B82F6" },
-                            { v: analytics.bloq, c: T.red },
                         ].map(({ v, c }, i) => (
                             <div key={i} style={{ width: `${analytics.total > 0 ? (v / analytics.total) * 100 : 0}%`, height: "100%", background: c, transition: "width .6s" }} />
                         ))}
@@ -71,7 +55,7 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, hist
                 {filtered.map(p => {
                     const u = updates[p.id] || {};
                     const isExp = expanded[p.id];
-                    const isEd = editId === p.id;
+
                     const st = STATUS[u.status];
                     const borderColor = st ? st.border : T.border;
                     const glowColor = st ? st.glow : "transparent";
@@ -89,19 +73,11 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, hist
                             )}
 
                             <div style={{ padding: "14px 18px", display: "flex", alignItems: "flex-start", gap: 14 }}>
-                                <div style={{ marginTop: 5, flexShrink: 0 }}>
-                                    <div className={!u.status || u.status === "AGUARDANDO" ? "pulse" : ""} style={{
-                                        width: 10, height: 10, borderRadius: "50%",
-                                        background: st ? st.fg : "#333",
-                                        boxShadow: st ? `0 0 8px ${st.fg}88` : "none"
-                                    }} />
-                                </div>
-
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 5 }}>
                                         <span style={{ color: T.red, fontWeight: 900, fontSize: 14, letterSpacing: .5 }}>CT {p.ct}</span>
                                         <span style={{ color: T.border }}>│</span>
-                                        <span style={{ color: T.dim, fontSize: 10 }}>{p.sheet === "PRÓXIMOS" ? "PROXIMOS" : "PIG. BRASA"}</span>
+                                        <span style={{ color: T.dim, fontSize: 10 }}>{p.sheet === "PRÓXIMOS" ? "PROXIMOS" : "PIQ. BRASA"}</span>
                                         <span style={{ color: T.border }}>│</span>
                                         <span style={{ color: "#A78BFA", fontWeight: 700, fontSize: 11 }}>{(p.peso_apto_kg || p.peso_kg || 0).toFixed(2)} t</span>
                                         {u.status && <Badge label={u.status} />}
@@ -133,45 +109,13 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, hist
                                         background: "#0A1F0F", border: "1px solid #166534",
                                         color: "#22C55E", borderRadius: 7, padding: "6px 10px", fontSize: 10, fontWeight: 700
                                     }}>📊 Excel</button>
-                                    <button onClick={() => openEdit(p)} style={{
-                                        background: isEd ? T.red : T.redDark + "33",
-                                        border: `1px solid ${T.red}`,
-                                        color: isEd ? "#fff" : "#ff8080",
-                                        borderRadius: 7, padding: "6px 12px", fontSize: 10, fontWeight: 700
-                                    }}>✏ {isEd ? "Editando" : "Editar"}</button>
+
                                     <button onClick={() => setExpanded(e => ({ ...e, [p.id]: !e[p.id] }))} style={{
                                         background: T.card, border: `1px solid ${T.border}`,
                                         color: T.sub, borderRadius: 7, padding: "6px 10px", fontSize: 10
                                     }}>{isExp ? "▲" : "▼"} {(p.items || p.itens || []).length}</button>
                                 </div>
                             </div>
-
-                            {/* Edit form */}
-                            {isEd && (
-                                <div style={{ background: "#0F0F0F", borderTop: `1px solid ${T.border}`, padding: "16px 18px" }}>
-                                    <div style={{ fontSize: 9, color: T.red, fontWeight: 700, letterSpacing: 3, marginBottom: 12 }}>ATUALIZACAO DIARIA · {today}</div>
-                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 12 }}>
-                                        {[
-                                            { k: "status", l: "STATUS", type: "select" },
-                                            { k: "responsavel", l: "RESPONSAVEL", type: "text", ph: "Nome" },
-                                            { k: "pesoRealizado", l: "PESO REALIZADO (t)", type: "number", ph: p.peso_apto_kg },
-                                            { k: "obs", l: "OBSERVACAO", type: "text", ph: "Anotacao..." },
-                                        ].map(({ k, l, type, ph }) => (
-                                            <div key={k}>
-                                                <label style={{ fontSize: 9, color: T.dim, display: "block", marginBottom: 4, letterSpacing: 1 }}>{l}</label>
-                                                {type === "select"
-                                                    ? <select value={editForm[k]} onChange={e => setEditForm(f => ({ ...f, [k]: e.target.value }))} style={{ width: "100%" }}>{SOPTS.map(s => <option key={s} value={s}>{s}</option>)}</select>
-                                                    : <input type={type} value={editForm[k]} onChange={e => setEditForm(f => ({ ...f, [k]: e.target.value }))} placeholder={String(ph || "")} style={{ width: "100%" }} step={type === "number" ? "0.001" : undefined} />
-                                                }
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div style={{ display: "flex", gap: 8 }}>
-                                        <button onClick={() => saveEdit(p)} style={{ background: T.red, border: "none", color: "#fff", borderRadius: 7, padding: "8px 20px", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>SALVAR</button>
-                                        <button onClick={() => setEditId(null)} style={{ background: "#1A1A1A", border: `1px solid ${T.border}`, color: T.sub, borderRadius: 7, padding: "8px 16px", fontSize: 11 }}>Cancelar</button>
-                                    </div>
-                                </div>
-                            )}
 
                             {/* Items table */}
                             {isExp && (

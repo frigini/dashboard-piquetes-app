@@ -2,7 +2,6 @@ import { T, PEND, DP } from "../../theme/theme";
 
 const Sidebar = ({
     view, setView, activeData, filtered,
-    sheetF, setSheetF, sheets,
     pendF, setPendF, allPends, pendSum,
     maqF, setMaqF, allMaqs,
 }) => {
@@ -30,25 +29,6 @@ const Sidebar = ({
                 <SideBtn label="Analise" k="analytics" icon="▲" />
                 <SideBtn label="Historico" k="history" icon="≡" />
                 <SideBtn label="Importar" k="import" icon="↑" />
-
-                <div style={{ height: 1, background: T.border, margin: "16px 0" }} />
-                <div style={{ fontSize: 9, color: T.dim, letterSpacing: 3, padding: "0 6px", marginBottom: 8 }}>ABA</div>
-                {sheets.map(sh => {
-                    const active = sheetF === sh;
-                    const cnt = sh === "TODOS" ? activeData.length : activeData.filter(p => (p.sheet || p.situacao || "TODOS") === sh).length;
-                    return (
-                        <button key={sh} onClick={() => setSheetF(sh)} className="hbtn" style={{
-                            width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: 7, marginBottom: 3,
-                            display: "flex", justifyContent: "space-between", alignItems: "center",
-                            background: active ? T.redDark + "33" : "transparent",
-                            border: `1px solid ${active ? T.red : "transparent"}`,
-                            color: active ? "#fff" : T.sub, fontSize: 10, fontWeight: active ? 700 : 400
-                        }}>
-                            <span>{sh === "TODOS" ? "Todos" : sh === "PIQUETES BRASA" ? "Piq. Brasa" : "Proximos"}</span>
-                            <span style={{ background: active ? T.red : "#1E1E1E", color: active ? "#fff" : T.dim, borderRadius: 10, padding: "1px 8px", fontSize: 9, fontWeight: 700 }}>{cnt}</span>
-                        </button>
-                    );
-                })}
 
                 <div style={{ height: 1, background: T.border, margin: "16px 0" }} />
                 <div style={{ fontSize: 9, color: T.dim, letterSpacing: 3, padding: "0 6px", marginBottom: 8 }}>PENDENCIA</div>
