@@ -5,7 +5,7 @@ import * as XLSX from "xlsx";
  * Exporta toda a Analise Operacional para PDF.
  * Inclui: resumo de status, metricas de peso, gargalos, rankings.
  */
-export function exportAnalyticsPDF(analytics, pct) {
+export function exportAnalyticsPDF(analytics, pct, unitLabel, fmtW) {
     try {
         const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
         const pageW = doc.internal.pageSize.getWidth();
@@ -39,10 +39,10 @@ export function exportAnalyticsPDF(analytics, pct) {
             ["Total de Piquetes", String(analytics.total)],
             ["Concluidos", `${analytics.concl} (${pct}%)`],
             ["Em Progresso", String(analytics.prog)],
-            ["Peso Total", `${analytics.totalPeso.toFixed(1)} t`],
-            ["Peso Concluido", `${analytics.conclPeso.toFixed(1)} t`],
-            ["Peso Em Progresso", `${analytics.progPeso.toFixed(1)} t`],
-            ["Peso Pendente", `${analytics.pendPeso.toFixed(1)} t`],
+            ["Peso Total", fmtW(analytics.totalPeso, 1)],
+            ["Peso Concluido", fmtW(analytics.conclPeso, 1)],
+            ["Peso Em Progresso", fmtW(analytics.progPeso, 1)],
+            ["Peso Pendente", fmtW(analytics.pendPeso, 1)],
             ["Posicoes Abertas", `${analytics.pendPos} em ${analytics.open.length} piquetes`],
             ["Avanco Geral", `${pct}%`],
         ];
@@ -66,7 +66,7 @@ export function exportAnalyticsPDF(analytics, pct) {
         doc.setFont("helvetica", "bold");
         doc.text("GARGALOS POR PENDENCIA", 14, y); y += 8;
 
-        const pendHeaders = ["PENDENCIA", "PIQUETES", "PESO (t)", "%"];
+        const pendHeaders = ["PENDENCIA", "PIQUETES", `PESO (${unitLabel})`, "%"];
         const pendColW = [60, 25, 30, 20];
         doc.setFillColor(232, 0, 29);
         doc.rect(14, y - 4, pendColW.reduce((a, b) => a + b, 0), 6, "F");
@@ -88,7 +88,7 @@ export function exportAnalyticsPDF(analytics, pct) {
             x = 14;
             doc.text(String(k), x + 1, y); x += pendColW[0];
             doc.text(String(v), x + 1, y); x += pendColW[1];
-            doc.text((analytics.pendW[k] || 0).toFixed(1), x + 1, y); x += pendColW[2];
+            doc.text(fmtW(analytics.pendW[k] || 0, 1), x + 1, y); x += pendColW[2];
             doc.text(`${analytics.open.length > 0 ? Math.round(v / analytics.open.length * 100) : 0}%`, x + 1, y);
             y += 6;
         });
@@ -132,7 +132,7 @@ export function exportAnalyticsPDF(analytics, pct) {
         doc.setFont("helvetica", "bold");
         doc.text("MENOR ESFORCO / MAIOR RETORNO (Top 10)", 14, y); y += 8;
 
-        const esfHeaders = ["#", "CT", "PIQUETE", "POS", "PESO (t)", "ROI t/pos", "PENDENCIAS"];
+        const esfHeaders = ["#", "CT", "PIQUETE", "POS", `PESO (${unitLabel})`, `ROI ${unitLabel}/pos`, "PENDENCIAS"];
         const esfColW = [10, 18, 60, 15, 22, 22, 80];
         doc.setFillColor(232, 0, 29);
         doc.rect(14, y - 4, esfColW.reduce((a, b) => a + b, 0), 6, "F");
@@ -157,7 +157,7 @@ export function exportAnalyticsPDF(analytics, pct) {
                 String(p.ct || ""),
                 String(p.piquete || "").slice(0, 35),
                 String(p.pos || 0),
-                (p.peso_apto_kg || p.peso_kg || 0).toFixed(2),
+                fmtW(p.peso_apto_kg || p.peso_kg || 0, 2),
                 p.score.toFixed(2),
                 (p.pendencias || []).join(", "),
             ];
@@ -175,7 +175,7 @@ export function exportAnalyticsPDF(analytics, pct) {
         doc.setFont("helvetica", "bold");
         doc.text("TOP PESO PENDENTE (Top 10)", 14, y); y += 8;
 
-        const topHeaders = ["#", "CT", "PESO (t)", "POSICOES", "PENDENCIAS"];
+        const topHeaders = ["#", "CT", `PESO (${unitLabel})`, "POSICOES", "PENDENCIAS"];
         const topColW = [10, 18, 25, 20, 100];
         doc.setFillColor(232, 0, 29);
         doc.rect(14, y - 4, topColW.reduce((a, b) => a + b, 0), 6, "F");
@@ -198,7 +198,7 @@ export function exportAnalyticsPDF(analytics, pct) {
             const row = [
                 `${i + 1}`,
                 String(p.ct || ""),
-                (p.peso_apto_kg || p.peso_kg || 0).toFixed(2),
+                fmtW(p.peso_apto_kg || p.peso_kg || 0, 2),
                 String((p.items || p.itens || []).length),
                 (p.pendencias || []).join(", "),
             ];
@@ -231,7 +231,7 @@ export function exportAnalyticsPDF(analytics, pct) {
  * Gera um arquivo com cabecalho, resumo e tabela de itens.
  * Desenha a tabela manualmente sem dependencia de jspdf-autotable.
  */
-export function exportPiquetePDF(p, updates) {
+export function exportPiquetePDF(p, updates, unitLabel, fmtW) {
     try {
         const u = (updates || {})[p.id] || {};
         const items = p.items || p.itens || [];
@@ -247,9 +247,9 @@ export function exportPiquetePDF(p, updates) {
         // Resumo
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
-        const peso = (p.peso_apto_kg || p.peso_kg || 0).toFixed(2);
+        const peso = fmtW(p.peso_apto_kg || p.peso_kg || 0, 2);
         const linhas = [
-            "Peso: " + peso + " t",
+            "Peso: " + peso,
             "Pendencias: " + (p.pendencias && p.pendencias.length > 0 ? p.pendencias.join(", ") : "-"),
             "Maquinas: " + (p.maquinas && p.maquinas.length > 0 ? p.maquinas.join(", ") : "-"),
         ];
@@ -260,7 +260,7 @@ export function exportPiquetePDF(p, updates) {
 
         // Tabela de itens
         if (items.length > 0) {
-            const headers = ["PRIO", "OV", "OP", "POSICAO", "MATERIAL", "QTD", "PESO kg", "MAQ", "PENDENCIA"];
+            const headers = ["PRIO", "OV", "OP", "POSICAO", "MATERIAL", "QTD", `PESO (${unitLabel})`, "MAQ", "PENDENCIA"];
             // Larguras das colunas (em mm) - total ~270mm para paisagem A4
             const colW = [15, 18, 28, 22, 55, 15, 22, 25, 40];
             const startX = 14;
@@ -302,7 +302,7 @@ export function exportPiquetePDF(p, updates) {
                     String(it.posicao || ""),
                     String(it.material || it.desc || "").slice(0, 30),
                     String(it.qtd != null ? it.qtd : ""),
-                    String((it.peso || 0).toFixed(3)),
+                    String(fmtW(it.peso || 0, 3)),
                     String(it.maq || ""),
                     String(it.pendencia || it.etapa || ""),
                 ];
@@ -333,17 +333,20 @@ export function exportPiquetePDF(p, updates) {
  * Exporta os dados de um piquete individual para Excel (.xlsx).
  * Usa Blob + link para garantir download no navegador.
  */
-export function exportPiqueteExcel(p, updates) {
+export function exportPiqueteExcel(p, updates, unitLabel, fmtW) {
     try {
         const u = (updates || {})[p.id] || {};
         const items = p.items || p.itens || [];
         const wb = XLSX.utils.book_new();
 
+        // Extrai valor numérico formatado para Excel 
+        const getV = (val) => unitLabel === 't' ? (Math.ceil((val / 1000) * 100) / 100) : val;
+
         // Aba Resumo
         const resumo = [
             ["CT", p.ct],
             ["Piquete", p.piquete || ""],
-            ["Peso (t)", (p.peso_apto_kg || p.peso_kg || 0).toFixed(2)],
+            [`Peso (${unitLabel})`, getV(p.peso_apto_kg || p.peso_kg || 0)],
             ["Pendencias", p.pendencias && p.pendencias.length > 0 ? p.pendencias.join(", ") : "-"],
             ["Maquinas", p.maquinas && p.maquinas.length > 0 ? p.maquinas.join(", ") : "-"],
         ];
@@ -353,7 +356,7 @@ export function exportPiqueteExcel(p, updates) {
 
         // Aba Itens
         if (items.length > 0) {
-            const header = ["PRIO", "OV", "OP", "POSICAO", "MATERIAL", "QTD", "PESO (kg)", "MAQ", "PENDENCIA"];
+            const header = ["PRIO", "OV", "OP", "POSICAO", "MATERIAL", "QTD", `PESO (${unitLabel})`, "MAQ", "PENDENCIA"];
             const rows = items.map(it => [
                 it.prio || "",
                 it.ov || "",
@@ -361,7 +364,7 @@ export function exportPiqueteExcel(p, updates) {
                 it.posicao || "",
                 it.material || it.desc || "",
                 it.qtd != null ? it.qtd : "",
-                it.peso || 0,
+                getV(it.peso || 0), // Usa numero bruto em string/number
                 it.maq || "",
                 it.pendencia || it.etapa || "",
             ]);

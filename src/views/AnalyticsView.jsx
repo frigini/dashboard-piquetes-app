@@ -4,14 +4,14 @@ import { Tag, Ring, Donut } from "../components/ui";
 import { HBar, LineChart } from "../components/charts";
 import { exportAnalyticsPDF } from "../utils/exportPiquete";
 
-const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, setActMaq, setPendF, setMaqF, setView }) => {
+const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, setActMaq, setPendF, setMaqF, setView, fmtW, unitLabel }) => {
     const [expRows, setExpRows] = useState({});
     const toggleRow = id => setExpRows(e => ({ ...e, [id]: !e[id] }));
     return (
         <div style={{ padding: "24px 28px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                 <div style={{ fontSize: 10, color: T.dim, letterSpacing: 4 }}>ANALISE OPERACIONAL</div>
-                <button onClick={() => exportAnalyticsPDF(analytics, pct)} style={{
+                <button onClick={() => exportAnalyticsPDF(analytics, pct, unitLabel, fmtW)} style={{
                     background: "#1A0808", border: `1px solid ${T.red}`,
                     color: "#ff8080", borderRadius: 8, padding: "8px 16px", fontSize: 11, fontWeight: 700,
                     display: "flex", alignItems: "center", gap: 6
@@ -51,9 +51,9 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
             {/* Metricas pendentes */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
                 {[
-                    { l: "PESO PENDENTE", v: `${analytics.pendPeso.toFixed(1)}t`, sub: `de ${analytics.totalPeso.toFixed(0)}t`, c: "#F97316", pct: analytics.totalPeso > 0 ? Math.round(analytics.pendPeso / analytics.totalPeso * 100) : 0 },
+                    { l: "PESO PENDENTE", v: fmtW(analytics.pendPeso, 1), sub: `de ${fmtW(analytics.totalPeso, 0)}`, c: "#F97316", pct: analytics.totalPeso > 0 ? Math.round(analytics.pendPeso / analytics.totalPeso * 100) : 0 },
                     { l: "POSICOES ABERTAS", v: analytics.pendPos, sub: `em ${analytics.open.length} piquetes`, c: "#3B82F6", pct: 0 },
-                    { l: "PESO CONCLUIDO", v: `${analytics.conclPeso.toFixed(1)}t`, sub: `de ${analytics.totalPeso.toFixed(0)}t`, c: "#22C55E", pct: analytics.totalPeso > 0 ? Math.round(analytics.conclPeso / analytics.totalPeso * 100) : 0 },
+                    { l: "PESO CONCLUIDO", v: fmtW(analytics.conclPeso, 1), sub: `de ${fmtW(analytics.totalPeso, 0)}`, c: "#22C55E", pct: analytics.totalPeso > 0 ? Math.round(analytics.conclPeso / analytics.totalPeso * 100) : 0 },
                 ].map(({ l, v, sub, c, pct: p2 }) => (
                     <div key={l} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: "18px 16px" }}>
                         <div style={{ fontSize: 9, color: T.sub, letterSpacing: 2, marginBottom: 8 }}>{l}</div>
@@ -82,7 +82,7 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                             />
                             <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                                 <div style={{ fontSize: 24, fontWeight: 900, color: "#fff" }}>{analytics.total}</div>
-                                <div style={{ fontSize: 9, color: T.sub, letterSpacing: 1 }}>{analytics.totalPeso.toFixed(0)}t</div>
+                                <div style={{ fontSize: 9, color: T.sub, letterSpacing: 1 }}>{fmtW(analytics.totalPeso, 0)}</div>
                             </div>
                         </div>
                         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
@@ -95,7 +95,7 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                                         <div style={{ width: 10, height: 10, borderRadius: "50%", background: st.c }} />
                                         <div style={{ fontSize: 12, color: T.text, fontWeight: 500 }}>{st.l}</div>
                                     </div>
-                                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{st.v} - {st.w.toFixed(1)}t <span style={{ fontSize: 10, color: T.dim, fontWeight: 400 }}>({analytics.total > 0 ? Math.round(st.v / analytics.total * 100) : 0}%)</span></div>
+                                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{st.v} - {fmtW(st.w, 1)} <span style={{ fontSize: 10, color: T.dim, fontWeight: 400 }}>({analytics.total > 0 ? Math.round(st.v / analytics.total * 100) : 0}%)</span></div>
                                 </div>
                             ))}
                         </div>
@@ -130,7 +130,7 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                                 }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
                                     <Tag label={k} />
-                                    <span style={{ marginLeft: "auto", fontSize: 9, color: T.sub }}>{v} piquetes · {analytics.pendW[k]?.toFixed(1)}t</span>
+                                    <span style={{ marginLeft: "auto", fontSize: 9, color: T.sub }}>{v} piquetes · {fmtW(analytics.pendW[k] || 0, 1)}</span>
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                     <div style={{ flex: 1, height: 6, background: T.muted, borderRadius: 6, overflow: "hidden" }}>
@@ -162,12 +162,12 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
             {/* Menor esforco */}
             <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: "18px 20px", marginBottom: 12 }}>
                 <div style={{ fontSize: 10, color: T.sub, letterSpacing: 3, marginBottom: 4 }}>MENOR ESFORCO / MAIOR RETORNO</div>
-                <div style={{ fontSize: 10, color: T.dim, marginBottom: 16 }}>Razao tonelagem / posicoes — priorize para maximo impacto com menor trabalho</div>
+                <div style={{ fontSize: 10, color: T.dim, marginBottom: 16 }}>Razao peso / posicoes — priorize para maximo impacto com menor trabalho</div>
                 <div style={{ overflowX: "auto" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                         <thead>
                             <tr>
-                                {["", "CT", "PIQUETE", "POS", "PESO", "ROI t/pos", "MAQUINAS", "PENDENCIAS"].map(h => (
+                                {["", "CT", "PIQUETE", "POS", `PESO ${unitLabel}`, `ROI ${unitLabel}/pos`, "MAQUINAS", "PENDENCIAS"].map(h => (
                                     <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 9, color: T.dim, letterSpacing: 1, borderBottom: `1px solid ${T.border}`, whiteSpace: "nowrap", fontWeight: 600 }}>{h}</th>
                                 ))}
                             </tr>
@@ -184,7 +184,7 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                                         <td style={{ padding: "9px 12px", color: T.text, textAlign: "center", fontWeight: 700 }}>
                                             <span style={{ cursor: "pointer" }}>{isExp ? "▲" : "▼"} {p.pos}</span>
                                         </td>
-                                        <td style={{ padding: "9px 12px", color: "#A78BFA", fontWeight: 700 }}>{(p.peso_apto_kg || p.peso_kg || 0).toFixed(2)}t</td>
+                                        <td style={{ padding: "9px 12px", color: "#A78BFA", fontWeight: 700 }}>{fmtW(p.peso_apto_kg || p.peso_kg || 0, 2)}</td>
                                         <td style={{ padding: "9px 12px" }}>
                                             <span style={{ background: i === 0 ? "#0A1F0F" : i === 1 ? "#0A1628" : "#111", color: i === 0 ? "#22C55E" : i === 1 ? "#3B82F6" : T.sub, border: `1px solid ${i === 0 ? "#166534" : i === 1 ? "#1E40AF" : T.border}`, borderRadius: 5, padding: "3px 10px", fontSize: 10, fontWeight: 700 }}>{p.score.toFixed(2)}</span>
                                         </td>
@@ -197,7 +197,7 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                                                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                                     <thead>
                                                         <tr style={{ background: "#111" }}>
-                                                            {["PRIO", "OV", "OP", "POSICAO", "MATERIAL", "QTD", "PESO kg", "MAQ", "PENDENCIA"].map(h => (
+                                                            {["PRIO", "OV", "OP", "POSICAO", "MATERIAL", "QTD", `PESO ${unitLabel}`, "MAQ", "PENDENCIA"].map(h => (
                                                                 <th key={h} style={{ padding: "5px 10px", textAlign: "left", fontSize: 8, color: T.dim, letterSpacing: 1, borderBottom: `1px solid ${T.border}`, fontWeight: 600 }}>{h}</th>
                                                             ))}
                                                         </tr>
@@ -211,7 +211,7 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                                                                 <td style={{ padding: "5px 10px", color: T.text, fontSize: 9 }}>{it.posicao}</td>
                                                                 <td style={{ padding: "5px 10px", color: T.sub, fontSize: 9, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.material || it.desc}</td>
                                                                 <td style={{ padding: "5px 10px", color: T.text, textAlign: "right", fontWeight: 600, fontSize: 10 }}>{it.qtd}</td>
-                                                                <td style={{ padding: "5px 10px", color: "#A78BFA", textAlign: "right", fontWeight: 600, fontFamily: "monospace", fontSize: 9 }}>{(it.peso || 0).toFixed(3)}</td>
+                                                                <td style={{ padding: "5px 10px", color: "#A78BFA", textAlign: "right", fontWeight: 600, fontFamily: "monospace", fontSize: 9 }}>{fmtW(it.peso || 0, 3)}</td>
                                                                 <td style={{ padding: "5px 10px" }}>
                                                                     <span style={{ color: "#38BDF8", background: "#071420", border: "1px solid #0369A1", borderRadius: 4, padding: "1px 6px", fontFamily: "monospace", fontSize: 8 }}>{it.maq}</span>
                                                                 </td>
@@ -233,7 +233,7 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
             {/* Top peso */}
             <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: "18px 20px" }}>
                 <div style={{ fontSize: 10, color: T.sub, letterSpacing: 3, marginBottom: 4 }}>TOP PESO PENDENTE</div>
-                <div style={{ fontSize: 10, color: T.dim, marginBottom: 16 }}>Maior tonelagem em aberto — priorize para volume de entrega</div>
+                <div style={{ fontSize: 10, color: T.dim, marginBottom: 16 }}>Maior peso em aberto — priorize para volume de entrega</div>
                 {analytics.topPeso.map((p, i) => {
                     const maxW = analytics.topPeso[0]?.peso_apto_kg || analytics.topPeso[0]?.peso_kg || 1;
                     const c = i === 0 ? T.red : i === 1 ? "#F97316" : i === 2 ? "#F59E0B" : T.muted;
@@ -246,7 +246,7 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                                     <div style={{ flex: 1, height: 8, background: T.muted, borderRadius: 4, overflow: "hidden" }}>
                                         <div style={{ height: "100%", width: `${((p.peso_apto_kg || p.peso_kg || 0) / maxW) * 100}%`, background: c, borderRadius: 4, transition: "width .6s", boxShadow: i === 0 ? `0 0 8px ${T.red}66` : "none" }} />
                                     </div>
-                                    <span style={{ fontSize: 12, fontWeight: 800, color: i === 0 ? T.red : "#A78BFA", flexShrink: 0 }}>{(p.peso_apto_kg || p.peso_kg || 0).toFixed(1)}t</span>
+                                    <span style={{ fontSize: 12, fontWeight: 800, color: i === 0 ? T.red : "#A78BFA", flexShrink: 0 }}>{fmtW(p.peso_apto_kg || p.peso_kg || 0, 1)}</span>
                                 </div>
                                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{p.pendencias.map(pd => <Tag key={pd} label={pd} />)}</div>
                             </div>

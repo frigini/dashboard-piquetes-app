@@ -1,7 +1,7 @@
 import { T } from "../theme/theme";
 import { Tag } from "../components/ui";
 
-const ImportView = ({ importedData, importStatus, importDragging, setImportDragging, processFile, confirmImport, cancelImport, setView }) => (
+const ImportView = ({ importedData, importStatus, importDragging, setImportDragging, processFile, confirmImport, cancelImport, setView, fmtW, unitLabel }) => (
     <div style={{ padding: "24px 28px" }}>
         <div style={{ fontSize: 10, color: T.dim, letterSpacing: 4, marginBottom: 20 }}>IMPORTAR PLANILHA</div>
 
@@ -34,7 +34,7 @@ const ImportView = ({ importedData, importStatus, importDragging, setImportDragg
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <div>
                         <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{importedData.length} piquetes lidos</div>
-                        <div style={{ fontSize: 10, color: T.dim, marginTop: 2 }}>{importedData.filter(p => p.pendencias?.length > 0).length} com pendencias · {importedData.reduce((a, p) => a + p.peso_kg, 0).toFixed(1)}t total</div>
+                        <div style={{ fontSize: 10, color: T.dim, marginTop: 2 }}>{importedData.filter(p => p.pendencias?.length > 0).length} com pendencias · {fmtW(importedData.reduce((a, p) => a + p.peso_kg, 0), 1)} total</div>
                     </div>
                     <div style={{ display: "flex", gap: 12 }}>
                         <button onClick={cancelImport} style={{ background: "transparent", border: `1px solid ${T.border}`, color: T.text, borderRadius: 8, padding: "10px 16px", fontSize: 12, fontWeight: 600 }}>
@@ -48,7 +48,7 @@ const ImportView = ({ importedData, importStatus, importDragging, setImportDragg
                 <div style={{ maxHeight: 300, overflowY: "auto" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10 }}>
                         <thead><tr style={{ background: "#0F0F0F", position: "sticky", top: 0 }}>
-                            {["CT", "PIQUETE", "PESO (t)", "PENDENCIAS", "STATUS OP", "DT CONTRATUAL"].map(h => (
+                            {["CT", "PIQUETE", `PESO (${unitLabel})`, "PENDENCIAS", "STATUS OP", "DT CONTRATUAL"].map(h => (
                                 <th key={h} style={{ padding: "7px 12px", textAlign: "left", color: T.dim, fontSize: 9, letterSpacing: 1, borderBottom: `1px solid ${T.border}`, whiteSpace: "nowrap" }}>{h}</th>
                             ))}
                         </tr></thead>
@@ -57,7 +57,7 @@ const ImportView = ({ importedData, importStatus, importDragging, setImportDragg
                                 <tr key={i} className="row" style={{ borderBottom: `1px solid #151515` }}>
                                     <td style={{ padding: "6px 12px", color: T.red, fontWeight: 700 }}>{p.ct}</td>
                                     <td style={{ padding: "6px 12px", color: T.sub, fontFamily: "monospace", fontSize: 9, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.piquete}</td>
-                                    <td style={{ padding: "6px 12px", color: "#A78BFA", fontWeight: 700 }}>{p.peso_kg.toFixed(1)}</td>
+                                    <td style={{ padding: "6px 12px", color: "#A78BFA", fontWeight: 700 }}>{fmtW(p.peso_kg, 1)}</td>
                                     <td style={{ padding: "6px 12px" }}><div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>{p.pendencias?.map(pd => <Tag key={pd} label={pd} />)}</div></td>
                                     <td style={{ padding: "6px 12px", color: p.status_op === "Aberto" ? "#F59E0B" : "#22C55E", fontSize: 9, fontWeight: 600 }}>{p.status_op}</td>
                                     <td style={{ padding: "6px 12px", color: T.dim, fontSize: 9 }}>{p.dt_contrat}</td>

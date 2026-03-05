@@ -1,7 +1,7 @@
 import { T } from "../theme/theme";
 import { Badge } from "../components/ui";
 
-const HistoryView = ({ history }) => (
+const HistoryView = ({ history, fmtW }) => (
     <div style={{ padding: "24px 28px" }}>
         <div style={{ fontSize: 10, color: T.dim, letterSpacing: 4, marginBottom: 20 }}>HISTORICO DE ATUALIZACOES</div>
         {history.length === 0 && (
@@ -22,7 +22,7 @@ const HistoryView = ({ history }) => (
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                         {e.changes?.status && <Badge label={e.changes.status} />}
                         {e.changes?.responsavel && <span style={{ color: T.sub, fontSize: 10 }}>👤 {e.changes.responsavel}</span>}
-                        {e.changes?.pesoRealizado && <span style={{ color: "#A78BFA", fontSize: 10 }}>⚖ {e.changes.pesoRealizado}t</span>}
+                        {e.changes?.pesoRealizado && <span style={{ color: "#A78BFA", fontSize: 10 }}>⚖ {fmtW ? fmtW(e.changes.pesoRealizado, 1) : `${e.changes.pesoRealizado} Kg`}</span>}
                         {e.changes?.obs && <span style={{ color: T.dim, fontSize: 10, fontStyle: "italic" }}>"{e.changes.obs.slice(0, 60)}"</span>}
                     </div>
                 </div>

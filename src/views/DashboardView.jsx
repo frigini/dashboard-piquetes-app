@@ -3,7 +3,7 @@ import { T, STATUS } from "../theme/theme";
 import { Badge, Tag, MachineTag } from "../components/ui";
 import { exportPiquetePDF, exportPiqueteExcel } from "../utils/exportPiquete";
 
-const DashboardView = ({ filtered, analytics, updates, pct, today, persist, history, activeData, search, setSearch }) => {
+const DashboardView = ({ filtered, analytics, updates, pct, today, persist, history, activeData, search, setSearch, fmtW, unitLabel }) => {
     const [expanded, setExpanded] = useState({});
 
     return (
@@ -15,7 +15,7 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, hist
                         { l: "TOTAL", v: analytics.total, c: T.text },
                         { l: "CONCLUIDOS", v: analytics.concl, c: "#22C55E" },
                         { l: "EM PROGRESSO", v: analytics.prog, c: "#3B82F6" },
-                        { l: "PESO TOTAL", v: `${(analytics.totalPeso || 0).toFixed(0)}t`, c: "#A78BFA" },
+                        { l: "PESO TOTAL", v: fmtW(analytics.totalPeso || 0, 0), c: "#A78BFA" },
                         { l: "AVANCO", v: `${pct}%`, c: "#22C55E" },
                     ].map(({ l, v, c }) => (
                         <div key={l} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 9, padding: "10px 14px", position: "relative", overflow: "hidden" }}>
@@ -79,7 +79,7 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, hist
                                         <span style={{ color: T.border }}>│</span>
                                         <span style={{ color: T.dim, fontSize: 10 }}>{p.sheet === "PRÓXIMOS" ? "PROXIMOS" : "PIQ. BRASA"}</span>
                                         <span style={{ color: T.border }}>│</span>
-                                        <span style={{ color: "#A78BFA", fontWeight: 700, fontSize: 11 }}>{(p.peso_apto_kg || p.peso_kg || 0).toFixed(2)} t</span>
+                                        <span style={{ color: "#A78BFA", fontWeight: 700, fontSize: 11 }}>{fmtW(p.peso_apto_kg || p.peso_kg || 0, 2)}</span>
                                         {u.status && <Badge label={u.status} />}
                                         <span style={{ marginLeft: "auto", fontSize: 9, color: T.dim }}>{u.updatedAt && `↻ ${u.updatedAt}`}</span>
                                     </div>
@@ -101,11 +101,11 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, hist
                                 </div>
 
                                 <div style={{ display: "flex", gap: 7, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                                    <button onClick={() => exportPiquetePDF(p, updates)} title="Exportar PDF" style={{
+                                    <button onClick={() => exportPiquetePDF(p, updates, unitLabel, fmtW)} title="Exportar PDF" style={{
                                         background: "#1A0808", border: `1px solid ${T.red}`,
                                         color: "#ff8080", borderRadius: 7, padding: "6px 10px", fontSize: 10, fontWeight: 700
                                     }}>📄 PDF</button>
-                                    <button onClick={() => exportPiqueteExcel(p, updates)} title="Exportar Excel" style={{
+                                    <button onClick={() => exportPiqueteExcel(p, updates, unitLabel, fmtW)} title="Exportar Excel" style={{
                                         background: "#0A1F0F", border: "1px solid #166534",
                                         color: "#22C55E", borderRadius: 7, padding: "6px 10px", fontSize: 10, fontWeight: 700
                                     }}>📊 Excel</button>
@@ -123,7 +123,7 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, hist
                                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                         <thead>
                                             <tr style={{ background: "#0F0F0F" }}>
-                                                {["PRIO", "OV", "OP", "POSICAO", "MATERIAL", "QTD", "PESO kg", "MAQ", "PENDENCIA"].map(h => (
+                                                {["PRIO", "OV", "OP", "POSICAO", "MATERIAL", "QTD", `PESO ${unitLabel}`, "MAQ", "PENDENCIA"].map(h => (
                                                     <th key={h} style={{ padding: "7px 12px", textAlign: "left", fontSize: 9, color: T.dim, letterSpacing: 1, borderBottom: `1px solid ${T.border}`, whiteSpace: "nowrap", fontWeight: 600 }}>{h}</th>
                                                 ))}
                                             </tr>
@@ -137,7 +137,7 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, hist
                                                     <td style={{ padding: "6px 12px", color: T.text, fontSize: 10 }}>{it.posicao}</td>
                                                     <td style={{ padding: "6px 12px", color: T.sub, fontSize: 10, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.material || it.desc}</td>
                                                     <td style={{ padding: "6px 12px", color: T.text, textAlign: "right", fontWeight: 600 }}>{it.qtd}</td>
-                                                    <td style={{ padding: "6px 12px", color: "#A78BFA", textAlign: "right", fontWeight: 600, fontFamily: "monospace" }}>{(it.peso || 0).toFixed(3)}</td>
+                                                    <td style={{ padding: "6px 12px", color: "#A78BFA", textAlign: "right", fontWeight: 600, fontFamily: "monospace" }}>{fmtW(it.peso || 0, 3)}</td>
                                                     <td style={{ padding: "6px 12px" }}>
                                                         <span style={{ color: "#38BDF8", background: "#071420", border: "1px solid #0369A1", borderRadius: 4, padding: "2px 8px", fontFamily: "monospace", fontSize: 9 }}>{it.maq}</span>
                                                     </td>

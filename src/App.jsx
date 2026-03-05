@@ -11,10 +11,23 @@ import ImportView from "./views/ImportView";
 
 export default function App() {
   const [view, setView] = useState("dash");
+  const [unit, setUnit] = useState("kg");
   const data = usePiquetesData();
   const filters = useFilters(data.activeData);
   const analytics = useAnalytics(filters.filtered, data.updates, data.history, filters.pendF, filters.maqF);
   const pct = analytics.total > 0 ? Math.round(analytics.concl / analytics.total * 100) : 0;
+
+  // Formata peso conforme a unidade selecionada (Kg ou Tonelada)
+  const fmtW = (valorKg, decimals = 1) => {
+    if (unit === "ton") {
+      const tonVal = Math.ceil((valorKg / 1000) * 100) / 100;
+      return `${tonVal.toFixed(2)}t`;
+    }
+    return `${valorKg.toFixed(decimals)} Kg`;
+  };
+
+  // Label da unidade atual
+  const unitLabel = unit === "ton" ? "t" : "Kg";
 
   return (
     <div style={{ fontFamily: "'Segoe UI',system-ui,sans-serif", background: T.black, minHeight: "100vh", color: T.text, display: "flex", flexDirection: "column", fontSize: 13 }}>
@@ -33,7 +46,7 @@ export default function App() {
         .row:hover{background:#1A1A1A!important}
       `}</style>
 
-      <Header analytics={analytics} pct={pct} today={data.today} timeStr={data.timeStr} />
+      <Header analytics={analytics} pct={pct} today={data.today} timeStr={data.timeStr} unit={unit} setUnit={setUnit} fmtW={fmtW} />
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <Sidebar
@@ -50,6 +63,7 @@ export default function App() {
               actPend={filters.actPend} setActPend={filters.setActPend}
               actMaq={filters.actMaq} setActMaq={filters.setActMaq}
               setPendF={filters.setPendF} setMaqF={filters.setMaqF} setView={setView}
+              fmtW={fmtW} unitLabel={unitLabel}
             />
           )}
 
@@ -59,10 +73,11 @@ export default function App() {
               importDragging={data.importDragging} setImportDragging={data.setImportDragging}
               processFile={data.processFile} confirmImport={data.confirmImport}
               cancelImport={data.cancelImport} setView={setView}
+              fmtW={fmtW} unitLabel={unitLabel}
             />
           )}
 
-          {view === "history" && <HistoryView history={data.history} />}
+          {view === "history" && <HistoryView history={data.history} unitLabel={unitLabel} />}
 
           {view === "dash" && (
             <DashboardView
@@ -70,6 +85,7 @@ export default function App() {
               updates={data.updates} pct={pct} today={data.today}
               persist={data.persist} history={data.history} activeData={data.activeData}
               search={filters.search} setSearch={filters.setSearch}
+              fmtW={fmtW} unitLabel={unitLabel}
             />
           )}
         </main>

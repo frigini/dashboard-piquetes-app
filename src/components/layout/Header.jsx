@@ -1,6 +1,6 @@
 import { T, LOGO_SRC } from "../../theme/theme";
 
-const Header = ({ analytics, pct, today, timeStr }) => (
+const Header = ({ analytics, pct, today, timeStr, unit, setUnit, fmtW }) => (
     <header style={{
         background: `linear-gradient(135deg, ${T.redDark} 0%, ${T.red} 55%, ${T.redDark} 100%)`,
         padding: "0 28px", height: 70, display: "flex", alignItems: "center",
@@ -23,7 +23,7 @@ const Header = ({ analytics, pct, today, timeStr }) => (
                 { l: "PIQUETES", v: analytics.total },
                 { l: "CONCLUIDOS", v: analytics.concl },
                 { l: "PROGRESSO", v: analytics.prog },
-                { l: "PESO TOTAL", v: `${analytics.totalPeso.toFixed(0)}t` },
+                { l: "PESO TOTAL", v: fmtW(analytics.totalPeso, 0) },
             ].map(({ l, v }, i, arr) => (
                 <div key={l} style={{ padding: "8px 18px", textAlign: "center", borderRight: i < arr.length - 1 ? "1px solid rgba(255,255,255,.1)" : "none" }}>
                     <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", lineHeight: 1 }}>{v}</div>
@@ -36,9 +36,45 @@ const Header = ({ analytics, pct, today, timeStr }) => (
             </div>
         </div>
 
-        <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 10, color: "rgba(255,200,200,.6)", letterSpacing: 2, marginBottom: 3 }}>ATUALIZACAO</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{today} {timeStr}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {/* Botão Kg ↔ Tonelada */}
+            <button
+                onClick={() => setUnit(u => u === "kg" ? "ton" : "kg")}
+                style={{
+                    background: "rgba(0,0,0,.3)",
+                    border: "1px solid rgba(255,255,255,.25)",
+                    borderRadius: 8,
+                    padding: "6px 14px",
+                    color: "#fff",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    backdropFilter: "blur(8px)",
+                    boxShadow: "0 2px 8px rgba(0,0,0,.3)",
+                }}
+                title={unit === "kg" ? "Converter para Tonelada" : "Converter para Kg"}
+            >
+                <span style={{ fontSize: 13 }}>⚖</span>
+                <span style={{
+                    background: unit === "kg" ? "rgba(255,255,255,.2)" : "transparent",
+                    borderRadius: 4, padding: "2px 6px",
+                    transition: "background .2s"
+                }}>Kg</span>
+                <span style={{ color: "rgba(255,255,255,.4)", fontSize: 10 }}>↔</span>
+                <span style={{
+                    background: unit === "ton" ? "rgba(255,255,255,.2)" : "transparent",
+                    borderRadius: 4, padding: "2px 6px",
+                    transition: "background .2s"
+                }}>Ton</span>
+            </button>
+
+            <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 10, color: "rgba(255,200,200,.6)", letterSpacing: 2, marginBottom: 3 }}>ATUALIZACAO</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{today} {timeStr}</div>
+            </div>
         </div>
     </header>
 );

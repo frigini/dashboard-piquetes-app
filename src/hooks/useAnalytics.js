@@ -70,7 +70,7 @@ export default function useAnalytics(filtered, updates, history, pendF, maqF) {
                 items.forEach(i => {
                     if (!pendF || pendF === "TODAS" || i.pendencia === pendF) {
                         if (i.pendencia) {
-                            const iWeight = i.peso > 0 ? (i.peso / 1000) : (pWeight / items.length);
+                            const iWeight = i.peso > 0 ? i.peso : (pWeight / items.length);
                             pendW[i.pendencia] = (pendW[i.pendencia] || 0) + iWeight;
                         }
                     }
