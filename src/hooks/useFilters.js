@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 
-export default function useFilters(activeData) {
+export default function useFilters(activeData, updates) {
+    const [statusF, setStatusF] = useState("TODOS");
     const [pendF, setPendF] = useState("TODAS");
     const [maqF, setMaqF] = useState("TODAS");
     const [search, setSearch] = useState("");
@@ -19,12 +20,30 @@ export default function useFilters(activeData) {
         return c;
     }, [activeData]);
 
-    // 1o Filtro: PENDENCIA
+    // Helper para determinar o status real no momento da filtragem
+    const calcStatus = (p) => {
+        if (updates && updates[p.id]?.status) return updates[p.id].status;
+        const op = (p.status_op || "").toUpperCase();
+        const sit = (p.situacao || "").toUpperCase();
+        if (op === "ENCERRADO" || sit === "FINALIZADO" || sit === "ENCER") return "CONCLUÍDO";
+        if (p.pendencias && p.pendencias.length > 0) return "EM PROGRESSO";
+        return "EM PROGRESSO";
+    };
+
+    // 1o Filtro: STATUS
+    const statusFiltered = useMemo(() =>
+        statusF === "TODOS"
+            ? activeData
+            : activeData.filter(p => calcStatus(p) === statusF),
+        [activeData, statusF, updates]
+    );
+
+    // 2o Filtro: PENDENCIA (sobre o resultado do STATUS)
     const pendFiltered = useMemo(() =>
         pendF === "TODAS"
-            ? activeData
-            : activeData.filter(p => (p.pendencias || []).includes(pendF)),
-        [activeData, pendF]
+            ? statusFiltered
+            : statusFiltered.filter(p => (p.pendencias || []).includes(pendF)),
+        [statusFiltered, pendF]
     );
 
     // Maquinas calculadas sobre o resultado da PENDENCIA
@@ -42,9 +61,11 @@ export default function useFilters(activeData) {
     }), [pendFiltered, maqF, search]);
 
     // Reset filtros filhos quando o pai muda
+    const setStatusFCascade = val => { setStatusF(val); setPendF("TODAS"); setMaqF("TODAS"); };
     const setPendFCascade = val => { setPendF(val); setMaqF("TODAS"); };
 
     return {
+        statusF, setStatusF: setStatusFCascade,
         pendF, setPendF: setPendFCascade, maqF, setMaqF,
         search, setSearch, actPend, setActPend, actMaq, setActMaq,
         allPends, allMaqs, pendSum, filtered,

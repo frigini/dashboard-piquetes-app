@@ -2,6 +2,7 @@ import { T, PEND, DP } from "../../theme/theme";
 
 const Sidebar = ({
     view, setView, activeData, filtered,
+    statusF, setStatusF,
     pendF, setPendF, allPends, pendSum,
     maqF, setMaqF, allMaqs,
 }) => {
@@ -29,6 +30,12 @@ const Sidebar = ({
                 <SideBtn label="Analise" k="analytics" icon="▲" />
                 <SideBtn label="Historico" k="history" icon="≡" />
                 <SideBtn label="Importar" k="import" icon="↑" />
+
+                <div style={{ height: 1, background: T.border, margin: "16px 0" }} />
+                <div style={{ fontSize: 9, color: T.dim, letterSpacing: 3, padding: "0 6px", marginBottom: 8 }}>STATUS</div>
+                <button onClick={() => setStatusF("TODOS")} className="hbtn" style={{ width: "100%", textAlign: "left", padding: "6px 12px", borderRadius: 6, marginBottom: 3, background: statusF === "TODOS" ? T.redDark + "33" : "transparent", border: `1px solid ${statusF === "TODOS" ? T.red : "transparent"}`, color: statusF === "TODOS" ? "#fff" : T.sub, fontSize: 10 }}>Todos os status</button>
+                <button onClick={() => setStatusF("EM PROGRESSO")} className="hbtn" style={{ width: "100%", textAlign: "left", padding: "6px 12px", borderRadius: 6, marginBottom: 3, background: statusF === "EM PROGRESSO" ? "rgba(59, 130, 246, 0.2)" : "transparent", border: `1px solid ${statusF === "EM PROGRESSO" ? "#3B82F6" : "transparent"}`, color: statusF === "EM PROGRESSO" ? "#60A5FA" : T.sub, fontSize: 10 }}>Em Progresso</button>
+                <button onClick={() => setStatusF("CONCLUÍDO")} className="hbtn" style={{ width: "100%", textAlign: "left", padding: "6px 12px", borderRadius: 6, marginBottom: 3, background: statusF === "CONCLUÍDO" ? "rgba(34, 197, 94, 0.2)" : "transparent", border: `1px solid ${statusF === "CONCLUÍDO" ? "#22C55E" : "transparent"}`, color: statusF === "CONCLUÍDO" ? "#4ADE80" : T.sub, fontSize: 10 }}>Concluídos</button>
 
                 <div style={{ height: 1, background: T.border, margin: "16px 0" }} />
                 <div style={{ fontSize: 9, color: T.dim, letterSpacing: 3, padding: "0 6px", marginBottom: 8 }}>PENDENCIA</div>

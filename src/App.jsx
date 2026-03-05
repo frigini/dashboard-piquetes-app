@@ -13,7 +13,7 @@ export default function App() {
   const [view, setView] = useState("dash");
   const [unit, setUnit] = useState("kg");
   const data = usePiquetesData();
-  const filters = useFilters(data.activeData);
+  const filters = useFilters(data.activeData, data.updates);
   const analytics = useAnalytics(filters.filtered, data.updates, data.history, filters.pendF, filters.maqF);
   const pct = analytics.total > 0 ? Math.round(analytics.concl / analytics.total * 100) : 0;
 
@@ -52,6 +52,7 @@ export default function App() {
         <Sidebar
           view={view} setView={setView}
           activeData={data.activeData} filtered={filters.filtered}
+          statusF={filters.statusF} setStatusF={filters.setStatusF}
           pendF={filters.pendF} setPendF={filters.setPendF} allPends={filters.allPends} pendSum={filters.pendSum}
           maqF={filters.maqF} setMaqF={filters.setMaqF} allMaqs={filters.allMaqs}
         />
@@ -60,6 +61,7 @@ export default function App() {
           {view === "analytics" && (
             <AnalyticsView
               analytics={analytics} updates={data.updates} pct={pct}
+              setStatusF={filters.setStatusF}
               actPend={filters.actPend} setActPend={filters.setActPend}
               actMaq={filters.actMaq} setActMaq={filters.setActMaq}
               setPendF={filters.setPendF} setMaqF={filters.setMaqF} setView={setView}

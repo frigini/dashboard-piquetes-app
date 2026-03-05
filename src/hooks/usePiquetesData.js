@@ -129,7 +129,7 @@ export default function usePiquetesData() {
 
                             const isHeader = row.some(c => typeof c === 'string' && c.trim().toUpperCase() === 'PENDÊNCIA');
                             if (isHeader) {
-                                gIdx = { ov: -1, cod_comp: -1, peso_comp: -1, maq: -1, etapa: -1, qtd: -1 };
+                                gIdx = { ov: -1, cod_comp: -1, peso_comp: -1, maq: -1, etapa: -1, qtd: -1, prio: -1, op: -1, posicao: -1, material: -1 };
                                 row.forEach((c, i) => {
                                     if (typeof c === 'string') {
                                         const upper = c.trim().toUpperCase();
@@ -139,6 +139,10 @@ export default function usePiquetesData() {
                                         if (upper === 'PESO') gIdx.peso_comp = i;
                                         if (upper === 'OV') gIdx.ov = i;
                                         if (upper === 'QTD') gIdx.qtd = i;
+                                        if (upper === 'PRIORIDADE' || upper === 'PRIO' || upper === 'PRIORI') gIdx.prio = i;
+                                        if (upper === 'OP') gIdx.op = i;
+                                        if (upper === 'POSIÇÃO' || upper === 'POSICAO' || upper === 'POS') gIdx.posicao = i;
+                                        if (upper === 'DESCRIÇÃO' || upper === 'DESCRICAO' || upper === 'MATERIAL' || upper === 'DESC' || upper.includes('DESCRI')) gIdx.material = i;
                                     }
                                 });
                                 continue;
@@ -162,6 +166,11 @@ export default function usePiquetesData() {
                                 if (ov && !currentPiqObj.ov) currentPiqObj.ov = String(ov);
 
                                 currentPiqObj.itens.push({
+                                    prio: gIdx.prio >= 0 ? String(row[gIdx.prio] || "") : "",
+                                    ov: gIdx.ov >= 0 ? String(row[gIdx.ov] || "") : "",
+                                    op: gIdx.op >= 0 ? String(row[gIdx.op] || "") : "",
+                                    posicao: gIdx.posicao >= 0 ? String(row[gIdx.posicao] || "") : "",
+                                    material: gIdx.material >= 0 ? String(row[gIdx.material] || "") : "",
                                     cod: comp,
                                     desc: '',
                                     qtd: gIdx.qtd >= 0 ? parseInt(row[gIdx.qtd]) || 1 : 1,
@@ -173,21 +182,26 @@ export default function usePiquetesData() {
                         }
                     } else {
                         const header = json[0].map(h => typeof h === 'string' ? h.trim() : h);
+                        const findIdx = (regexes) => header.findIndex(h => typeof h === 'string' && regexes.some(r => r.test(h)));
                         const idx = {
-                            plano: header.indexOf('Plano GAL'),
-                            ct: header.indexOf('Contrato'),
-                            piquete: header.indexOf('Piquete'),
-                            descr: header.indexOf('Descrição Embalagem'),
-                            peso: header.indexOf('Peso Piquete'),
-                            situacao: header.indexOf('Situação Piquete'),
-                            status_op: header.indexOf('Status OP'),
-                            dt: header.indexOf('Data Contratual'),
-                            ov: header.indexOf('Ordem Venda'),
-                            cod_comp: header.indexOf('Cód. Componente'),
-                            desc_comp: header.indexOf('Descrição Componente'),
-                            qtd: header.indexOf('Qtde Necessária'),
-                            peso_comp: header.indexOf('Peso OP Componente'),
-                            etapa: header.indexOf('Etapa Atual'),
+                            plano: findIdx([/Plano GAL/i]),
+                            ct: findIdx([/Contrato/i, /^CT$/i]),
+                            piquete: findIdx([/Piquete/i]),
+                            descr: findIdx([/Descrição Embalagem/i, /Descr/i]),
+                            peso: findIdx([/Peso Piquete/i]),
+                            situacao: findIdx([/Situação Piquete/i, /Situacao/i]),
+                            status_op: findIdx([/Status OP/i]),
+                            dt: findIdx([/Data Contratual/i]),
+                            ov: findIdx([/Ordem Venda/i, /^OV$/i]),
+                            cod_comp: findIdx([/Cód\. Componente/i, /^COMP/i]),
+                            desc_comp: findIdx([/Descrição Componente/i, /Material/i, /Desc/i]),
+                            qtd: findIdx([/Qtde Necessária/i, /^QTD/i]),
+                            peso_comp: findIdx([/Peso OP Componente/i, /^PESO$/i]),
+                            etapa: findIdx([/Etapa Atual/i, /Pend/i]),
+                            prio: findIdx([/Prioridade/i, /^PRIO/i]),
+                            op: findIdx([/^OP$/i, /Ordem Produ/i]),
+                            posicao: findIdx([/Posi/i, /^POS/i]),
+                            maq: findIdx([/M.quina/i, /^MAQ/i])
                         };
 
                         if (idx.piquete === -1) throw new Error("Formato tabular não reconhecido. Cabeçalho 'Piquete' ausente.");
@@ -217,13 +231,23 @@ export default function usePiquetesData() {
                             }
                             const etapa = cols[idx.etapa] || '-';
                             if (etapa && etapa !== 'Finalizado' && etapa !== '-') piqMap[piq].pendencias.add(etapa);
+
+                            const maq = idx.maq >= 0 ? (cols[idx.maq] || '-') : '-';
+                            if (maq && maq !== '-') piqMap[piq].maquinas.add(maq);
+
                             if (cols[idx.cod_comp]) {
                                 piqMap[piq].itens.push({
+                                    prio: idx.prio >= 0 ? String(cols[idx.prio] || "") : "",
+                                    ov: idx.ov >= 0 ? String(cols[idx.ov] || "") : "",
+                                    op: idx.op >= 0 ? String(cols[idx.op] || "") : "",
+                                    posicao: idx.posicao >= 0 ? String(cols[idx.posicao] || "") : "",
+                                    material: idx.desc_comp >= 0 ? String(cols[idx.desc_comp] || "") : "",
                                     cod: cols[idx.cod_comp],
-                                    desc: cols[idx.desc_comp] || '',
+                                    desc: idx.desc_comp >= 0 ? String(cols[idx.desc_comp] || "") : "",
                                     qtd: parseInt(cols[idx.qtd]) || 0,
                                     peso: parseFloat(String(cols[idx.peso_comp] || 0).replace(',', '.')) || 0,
                                     etapa,
+                                    maq: idx.maq >= 0 ? String(cols[idx.maq] || "") : ""
                                 });
                             }
                         }

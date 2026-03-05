@@ -4,7 +4,7 @@ import { Tag, Ring, Donut } from "../components/ui";
 import { HBar, LineChart } from "../components/charts";
 import { exportAnalyticsPDF } from "../utils/exportPiquete";
 
-const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, setActMaq, setPendF, setMaqF, setView, fmtW, unitLabel }) => {
+const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, setActMaq, setStatusF, setPendF, setMaqF, setView, fmtW, unitLabel }) => {
     const [expRows, setExpRows] = useState({});
     const toggleRow = id => setExpRows(e => ({ ...e, [id]: !e[id] }));
     return (
@@ -21,14 +21,23 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
             {/* Status Cards — CONCLUIDOS e EM PROGRESSO */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
                 {[
-                    { l: "TOTAL PIQUETES", v: analytics.total, c: T.text, bg: T.card },
-                    { l: "CONCLUIDOS", v: analytics.concl, c: "#22C55E", bg: "#0A1F0F" },
-                    { l: "EM PROGRESSO", v: analytics.prog, c: "#3B82F6", bg: "#0A1628" },
-                    { l: "AVANCO GERAL", v: `${pct}%`, c: "#22C55E", bg: T.card },
-                ].map(({ l, v, c, bg }) => {
+                    { l: "TOTAL PIQUETES", v: analytics.total, c: T.text, bg: T.card, st: "TODOS" },
+                    { l: "CONCLUIDOS", v: analytics.concl, c: "#22C55E", bg: "#0A1F0F", st: "CONCLUÍDO" },
+                    { l: "EM PROGRESSO", v: analytics.prog, c: "#3B82F6", bg: "#0A1628", st: "EM PROGRESSO" },
+                    { l: "AVANCO GERAL", v: `${pct}%`, c: "#22C55E", bg: T.card, st: null },
+                ].map(({ l, v, c, bg, st }) => {
                     const p2 = typeof v === "number" && analytics.total > 0 ? Math.round(v / analytics.total * 100) : 0;
+                    const isClickable = st !== null;
                     return (
-                        <div key={l} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: "18px 16px", position: "relative", overflow: "hidden" }}>
+                        <div key={l}
+                            onClick={() => { if (isClickable) { setStatusF(st); setView("dash"); } }}
+                            style={{
+                                background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: "18px 16px", position: "relative", overflow: "hidden",
+                                cursor: isClickable ? "pointer" : "default", opacity: isClickable ? 1 : 0.9, transition: "all 0.2s",
+                                ":hover": isClickable ? { borderColor: c, boxShadow: `0 0 10px ${c}33` } : {}
+                            }}
+                            className={isClickable ? "pcard" : ""}
+                        >
                             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: c }} />
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                                 <div>
