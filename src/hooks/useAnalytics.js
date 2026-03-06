@@ -72,10 +72,11 @@ export default function useAnalytics(data, updates, pendF, maqF) {
                 });
             } else {
                 items.forEach(i => {
-                    if (!pendF || pendF === "TODAS" || i.pendencia === pendF) {
-                        if (i.pendencia) {
+                    const iPend = i.pendencia || i.etapa;
+                    if (iPend) {
+                        if (!pendF || pendF === "TODAS" || iPend === pendF) {
                             const iWeight = i.peso > 0 ? i.peso : (pWeight / items.length);
-                            pendW[i.pendencia] = (pendW[i.pendencia] || 0) + iWeight;
+                            pendW[iPend] = (pendW[iPend] || 0) + iWeight;
                         }
                     }
                 });
