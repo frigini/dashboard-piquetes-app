@@ -26,8 +26,11 @@ export default function useFilters(activeData, updates) {
         const op = (p.status_op || "").toUpperCase();
         const sit = (p.situacao || "").toUpperCase();
         if (op === "ENCERRADO" || sit === "FINALIZADO" || sit === "ENCER") return "CONCLUÍDO";
-        if (p.pendencias && p.pendencias.length > 0) return "EM PROGRESSO";
-        return "EM PROGRESSO";
+
+        const hasPend = p.pendencias && p.pendencias.length > 0 &&
+            p.pendencias.some(x => x && x.trim() !== "" && x !== "-" && x !== "—" && x.toUpperCase() !== "FINALIZADO");
+
+        return hasPend ? "EM PROGRESSO" : "CONCLUÍDO";
     };
 
     // 1o Filtro: STATUS

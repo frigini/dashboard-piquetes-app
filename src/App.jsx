@@ -6,7 +6,6 @@ import useAnalytics from "./hooks/useAnalytics";
 import { Header, Sidebar } from "./components/layout";
 import DashboardView from "./views/DashboardView";
 import AnalyticsView from "./views/AnalyticsView";
-import HistoryView from "./views/HistoryView";
 import ImportView from "./views/ImportView";
 
 export default function App() {
@@ -14,7 +13,7 @@ export default function App() {
   const [unit, setUnit] = useState("kg");
   const data = usePiquetesData();
   const filters = useFilters(data.activeData, data.updates);
-  const analytics = useAnalytics(filters.filtered, data.updates, data.history, filters.pendF, filters.maqF);
+  const analytics = useAnalytics(filters.filtered, data.updates, filters.pendF, filters.maqF);
   const pct = analytics.total > 0 ? Math.round(analytics.concl / analytics.total * 100) : 0;
 
   // Formata peso conforme a unidade selecionada (Kg ou Tonelada)
@@ -79,13 +78,12 @@ export default function App() {
             />
           )}
 
-          {view === "history" && <HistoryView history={data.history} unitLabel={unitLabel} />}
 
           {view === "dash" && (
             <DashboardView
               filtered={filters.filtered} analytics={analytics}
               updates={data.updates} pct={pct} today={data.today}
-              persist={data.persist} history={data.history} activeData={data.activeData}
+              persist={data.persist} activeData={data.activeData}
               search={filters.search} setSearch={filters.setSearch}
               fmtW={fmtW} unitLabel={unitLabel}
             />

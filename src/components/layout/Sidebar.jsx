@@ -28,7 +28,6 @@ const Sidebar = ({
                 <div style={{ fontSize: 9, color: T.dim, letterSpacing: 3, padding: "0 6px", marginBottom: 8 }}>NAVEGACAO</div>
                 <SideBtn label="Dashboard" k="dash" icon="◈" />
                 <SideBtn label="Analise" k="analytics" icon="▲" />
-                <SideBtn label="Historico" k="history" icon="≡" />
                 <SideBtn label="Importar" k="import" icon="↑" />
 
                 <div style={{ height: 1, background: T.border, margin: "16px 0" }} />

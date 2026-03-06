@@ -4,7 +4,6 @@ import { PIQUETES_DATA } from "../data/piquetesData";
 
 export default function usePiquetesData() {
     const [updates, setUpdates] = useState({});
-    const [history, setHistory] = useState([]);
     const [importedData, setImportedData] = useState([]);
     const [importStatus, setImportStatus] = useState(null);
     const [importDragging, setImportDragging] = useState(false);
@@ -24,12 +23,10 @@ export default function usePiquetesData() {
             try {
                 if (window.storage) {
                     const a = await window.storage.get("piq_updates"); if (a) setUpdates(JSON.parse(a.value));
-                    const b = await window.storage.get("piq_history"); if (b) setHistory(JSON.parse(b.value));
                     const dyn = await window.storage.get("piq_dyn"); if (dyn) setDynData(JSON.parse(dyn.value));
                 } else {
                     // Fallback para o localStorage nativo do navegador
                     const a = localStorage.getItem("piq_updates"); if (a) setUpdates(JSON.parse(a));
-                    const b = localStorage.getItem("piq_history"); if (b) setHistory(JSON.parse(b));
                     const dyn = localStorage.getItem("piq_dyn"); if (dyn) setDynData(JSON.parse(dyn));
                 }
             } catch { }
@@ -37,17 +34,14 @@ export default function usePiquetesData() {
         load();
     }, []);
 
-    const persist = useCallback((u, h) => {
+    const persist = useCallback((u) => {
         setUpdates(u);
-        if (h !== undefined) setHistory(h);
         try {
             if (window.storage) {
                 window.storage.set("piq_updates", JSON.stringify(u));
-                if (h !== undefined) window.storage.set("piq_history", JSON.stringify(h));
             } else {
                 // Fallback para o localStorage nativo do navegador
                 localStorage.setItem("piq_updates", JSON.stringify(u));
-                if (h !== undefined) localStorage.setItem("piq_history", JSON.stringify(h));
             }
         } catch { }
     }, []);
@@ -324,7 +318,7 @@ export default function usePiquetesData() {
     }, []);
 
     return {
-        updates, history, activeData, today, timeStr, now,
+        updates, activeData, today, timeStr, now,
         importedData, importStatus, importDragging, setImportDragging,
         persist, processFile, confirmImport, cancelImport,
     };

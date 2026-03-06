@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-export default function useAnalytics(filtered, updates, history, pendF, maqF) {
+export default function useAnalytics(data, updates, pendF, maqF) {
     return useMemo(() => {
         const baseDateString = (d) => {
             if (!d) return null;
@@ -13,11 +13,15 @@ export default function useAnalytics(filtered, updates, history, pendF, maqF) {
             const op = (p.status_op || "").toUpperCase();
             const sit = (p.situacao || "").toUpperCase();
             if (op === "ENCERRADO" || sit === "FINALIZADO" || sit === "ENCER") return "CONCLUÍDO";
-            if (p.pendencias && p.pendencias.length > 0) return "EM PROGRESSO";
-            return "EM PROGRESSO";
+
+            // Se não tem pendências reais, está concluído
+            const hasPend = p.pendencias && p.pendencias.length > 0 &&
+                p.pendencias.some(x => x && x.trim() !== "" && x !== "-" && x !== "—" && x.toUpperCase() !== "FINALIZADO");
+
+            return hasPend ? "EM PROGRESSO" : "CONCLUÍDO";
         };
 
-        const all = filtered;
+        const all = data;
         const mapped = all.map(p => ({ ...p, calcSt: calcStatus(p) }));
 
         const conclArr = mapped.filter(p => p.calcSt === "CONCLUÍDO");
@@ -80,17 +84,14 @@ export default function useAnalytics(filtered, updates, history, pendF, maqF) {
 
         const gPend = Object.entries(pendC).sort((a, b) => b[1] - a[1]);
         const gMaq = Object.entries(maqC).sort((a, b) => b[1] - a[1]).slice(0, 10);
-        const esforco = all.map(p => ({ ...p, score: (p.peso_apto_kg || p.peso_kg || 0) / Math.max((p.items || p.itens || []).length, 1), pos: (p.items || p.itens || []).length })).sort((a, b) => b.score - a.score).slice(0, 10);
+        const esforco = open.map(p => ({ ...p, score: (p.peso_apto_kg || p.peso_kg || 0) / Math.max((p.items || p.itens || []).length, 1), pos: (p.items || p.itens || []).length })).sort((a, b) => b.score - a.score).slice(0, 10);
         const topPeso = [...open].sort((a, b) => (b.peso_apto_kg || b.peso_kg || 0) - (a.peso_apto_kg || a.peso_kg || 0)).slice(0, 10);
 
-        // Evolução de Conclusões
+        // Evolução de Conclusões (Simplified since history is removed)
         const dayMap = {};
         mapped.forEach(p => {
             if (p.calcSt === "CONCLUÍDO") {
-                const userHist = history.slice().reverse().find(e => e.id === p.id && e.changes?.status === "CONCLUÍDO");
-                if (userHist) {
-                    dayMap[userHist.date] = (dayMap[userHist.date] || 0) + 1;
-                } else if (p.dt_contrat) {
+                if (p.dt_contrat) {
                     const d = baseDateString(p.dt_contrat);
                     if (d) dayMap[d] = (dayMap[d] || 0) + 1;
                 } else {
@@ -111,5 +112,5 @@ export default function useAnalytics(filtered, updates, history, pendF, maqF) {
 
         const totalPeso = all.reduce((a, p) => a + (p.peso_apto_kg || p.peso_kg || 0), 0);
         return { total: all.length, concl, prog, conclPeso, progPeso, open, pendC, pendW, gPend, gMaq, esforco, topPeso, evo, totalPeso, pendPeso, pendPos };
-    }, [updates, history, filtered, pendF, maqF]);
+    }, [updates, data, pendF, maqF]);
 }

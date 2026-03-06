@@ -139,7 +139,7 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                                 }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
                                     <Tag label={k} />
-                                    <span style={{ marginLeft: "auto", fontSize: 9, color: T.sub }}>{v} piquetes · {fmtW(analytics.pendW[k] || 0, 1)}</span>
+                                    <span style={{ marginLeft: "auto", fontSize: 9, color: T.sub, textAlign: "right" }}>{v} piquetes · {fmtW(analytics.pendW[k] || 0, 1)}</span>
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                     <div style={{ flex: 1, height: 6, background: T.muted, borderRadius: 6, overflow: "hidden" }}>
@@ -177,7 +177,7 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                         <thead>
                             <tr>
                                 {["", "CT", "PIQUETE", "POS", `PESO ${unitLabel}`, `ROI ${unitLabel}/pos`, "MAQUINAS", "PENDENCIAS"].map(h => (
-                                    <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 9, color: T.dim, letterSpacing: 1, borderBottom: `1px solid ${T.border}`, whiteSpace: "nowrap", fontWeight: 600 }}>{h}</th>
+                                    <th key={h} style={{ padding: "8px 12px", textAlign: "center", fontSize: 9, color: T.dim, letterSpacing: 1, borderBottom: `1px solid ${T.border}`, whiteSpace: "nowrap", fontWeight: 600 }}>{h}</th>
                                 ))}
                             </tr>
                         </thead>
@@ -187,18 +187,18 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                                 const isExp = expRows[p.id];
                                 return [
                                     <tr key={p.id} className="row" onClick={() => toggleRow(p.id)} style={{ borderBottom: `1px solid ${T.border}`, cursor: "pointer" }}>
-                                        <td style={{ padding: "9px 12px", fontSize: i < 3 ? 16 : 11, color: T.dim }}>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}</td>
-                                        <td style={{ padding: "9px 12px", color: T.red, fontWeight: 800, fontSize: 12 }}>{p.ct}</td>
-                                        <td style={{ padding: "9px 12px", color: T.sub, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 10 }}>{p.piquete?.slice(0, 38)}</td>
+                                        <td style={{ padding: "9px 12px", fontSize: i < 3 ? 16 : 11, color: T.dim, textAlign: "center" }}>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}</td>
+                                        <td style={{ padding: "9px 12px", color: T.red, fontWeight: 800, fontSize: 12, textAlign: "center" }}>{p.ct}</td>
+                                        <td style={{ padding: "9px 12px", color: T.sub, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 10, textAlign: "center" }}>{p.piquete?.slice(0, 38)}</td>
                                         <td style={{ padding: "9px 12px", color: T.text, textAlign: "center", fontWeight: 700 }}>
                                             <span style={{ cursor: "pointer" }}>{isExp ? "▲" : "▼"} {p.pos}</span>
                                         </td>
-                                        <td style={{ padding: "9px 12px", color: "#A78BFA", fontWeight: 700 }}>{fmtW(p.peso_apto_kg || p.peso_kg || 0, 2)}</td>
-                                        <td style={{ padding: "9px 12px" }}>
+                                        <td style={{ padding: "9px 12px", color: "#A78BFA", fontWeight: 700, textAlign: "center" }}>{fmtW(p.peso_apto_kg || p.peso_kg || 0, 2)}</td>
+                                        <td style={{ padding: "9px 12px", textAlign: "center" }}>
                                             <span style={{ background: i === 0 ? "#0A1F0F" : i === 1 ? "#0A1628" : "#111", color: i === 0 ? "#22C55E" : i === 1 ? "#3B82F6" : T.sub, border: `1px solid ${i === 0 ? "#166534" : i === 1 ? "#1E40AF" : T.border}`, borderRadius: 5, padding: "3px 10px", fontSize: 10, fontWeight: 700 }}>{p.score.toFixed(2)}</span>
                                         </td>
-                                        <td style={{ padding: "9px 12px", color: T.dim, fontSize: 9 }}>{p.maquinas?.join(", ")}</td>
-                                        <td style={{ padding: "9px 12px" }}>{p.pendencias && p.pendencias.length > 0 ? <span style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{p.pendencias.map(pd => <Tag key={pd} label={pd} />)}</span> : <span style={{ color: T.dim, fontSize: 9 }}>—</span>}</td>
+                                        <td style={{ padding: "9px 12px", color: T.dim, fontSize: 9, textAlign: "center" }}>{p.maquinas?.join(", ")}</td>
+                                        <td style={{ padding: "9px 12px", textAlign: "center" }}>{p.pendencias && p.pendencias.length > 0 ? <span style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>{p.pendencias.map(pd => <Tag key={pd} label={pd} />)}</span> : <span style={{ color: T.dim, fontSize: 9 }}>—</span>}</td>
                                     </tr>,
                                     isExp && items.length > 0 && (
                                         <tr key={p.id + "_items"}>
@@ -207,24 +207,44 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                                                     <thead>
                                                         <tr style={{ background: "#111" }}>
                                                             {["PRIO", "OV", "OP", "POSICAO", "MATERIAL", "QTD", `PESO ${unitLabel}`, "MAQ", "PENDENCIA"].map(h => (
-                                                                <th key={h} style={{ padding: "5px 10px", textAlign: "left", fontSize: 8, color: T.dim, letterSpacing: 1, borderBottom: `1px solid ${T.border}`, fontWeight: 600 }}>{h}</th>
+                                                                <th key={h} style={{ padding: "5px 10px", textAlign: "center", fontSize: 8, color: T.dim, letterSpacing: 1, borderBottom: `1px solid ${T.border}`, fontWeight: 600 }}>{h}</th>
                                                             ))}
                                                         </tr>
                                                     </thead>
                                                     <tbody>
                                                         {items.map((it, idx) => (
                                                             <tr key={idx} style={{ borderBottom: `1px solid #151515` }}>
-                                                                <td style={{ padding: "5px 10px", color: T.red, fontWeight: 800, fontSize: 10 }}>{it.prio}</td>
-                                                                <td style={{ padding: "5px 10px", color: T.sub, fontSize: 9 }}>{it.ov}</td>
-                                                                <td style={{ padding: "5px 10px", color: T.dim, fontFamily: "monospace", fontSize: 8 }}>{it.op}</td>
-                                                                <td style={{ padding: "5px 10px", color: T.text, fontSize: 9 }}>{it.posicao}</td>
-                                                                <td style={{ padding: "5px 10px", color: T.sub, fontSize: 9, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.material || it.desc}</td>
-                                                                <td style={{ padding: "5px 10px", color: T.text, textAlign: "right", fontWeight: 600, fontSize: 10 }}>{it.qtd}</td>
-                                                                <td style={{ padding: "5px 10px", color: "#A78BFA", textAlign: "right", fontWeight: 600, fontFamily: "monospace", fontSize: 9 }}>{fmtW(it.peso || 0, 3)}</td>
-                                                                <td style={{ padding: "5px 10px" }}>
-                                                                    <span style={{ color: "#38BDF8", background: "#071420", border: "1px solid #0369A1", borderRadius: 4, padding: "1px 6px", fontFamily: "monospace", fontSize: 8 }}>{it.maq}</span>
+                                                                <td style={{ padding: "5px 10px", color: T.red, fontWeight: 800, fontSize: 10 }}>
+                                                                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>{it.prio}</div>
                                                                 </td>
-                                                                <td style={{ padding: "5px 10px" }}>{(it.pendencia || it.etapa) && (it.pendencia || it.etapa) !== "Finalizado" && (it.pendencia || it.etapa) !== "-" && <Tag label={it.pendencia || it.etapa} />}</td>
+                                                                <td style={{ padding: "5px 10px", color: T.sub, fontSize: 9 }}>
+                                                                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>{it.ov}</div>
+                                                                </td>
+                                                                <td style={{ padding: "5px 10px", color: T.dim, fontFamily: "monospace", fontSize: 8 }}>
+                                                                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>{it.op}</div>
+                                                                </td>
+                                                                <td style={{ padding: "5px 10px", color: T.text, fontSize: 9 }}>
+                                                                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>{it.posicao}</div>
+                                                                </td>
+                                                                <td style={{ padding: "5px 10px", color: T.sub, fontSize: 9, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>{it.material || it.desc}</div>
+                                                                </td>
+                                                                <td style={{ padding: "5px 10px", color: T.text, fontWeight: 600, fontSize: 10 }}>
+                                                                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>{it.qtd}</div>
+                                                                </td>
+                                                                <td style={{ padding: "5px 10px", color: "#A78BFA", fontWeight: 600, fontFamily: "monospace", fontSize: 9 }}>
+                                                                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>{fmtW(it.peso || 0, 3)}</div>
+                                                                </td>
+                                                                <td style={{ padding: "5px 10px" }}>
+                                                                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                                                        <span style={{ color: "#38BDF8", background: "#071420", border: "1px solid #0369A1", borderRadius: 4, padding: "1px 6px", fontFamily: "monospace", fontSize: 8 }}>{it.maq}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td style={{ padding: "5px 10px" }}>
+                                                                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                                                        {(it.pendencia || it.etapa) && (it.pendencia || it.etapa) !== "Finalizado" && (it.pendencia || it.etapa) !== "-" && <Tag label={it.pendencia || it.etapa} />}
+                                                                    </div>
+                                                                </td>
                                                             </tr>
                                                         ))}
                                                     </tbody>
@@ -249,8 +269,8 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                     return (
                         <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 10px", borderRadius: 8, marginBottom: 6, background: i === 0 ? "#1A0808" : "transparent", border: `1px solid ${i === 0 ? T.red : T.border}`, transition: "all .2s" }}>
                             <div style={{ fontSize: i < 3 ? 16 : 10, width: 24, textAlign: "center", flexShrink: 0 }}>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}</div>
-                            <div style={{ width: 40, fontSize: 11, color: T.red, fontWeight: 800, flexShrink: 0 }}>CT {p.ct}</div>
                             <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ color: T.red, fontWeight: 900, fontSize: 13, marginBottom: 4, letterSpacing: .5 }}>{p.piquete}</div>
                                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 5 }}>
                                     <div style={{ flex: 1, height: 8, background: T.muted, borderRadius: 4, overflow: "hidden" }}>
                                         <div style={{ height: "100%", width: `${((p.peso_apto_kg || p.peso_kg || 0) / maxW) * 100}%`, background: c, borderRadius: 4, transition: "width .6s", boxShadow: i === 0 ? `0 0 8px ${T.red}66` : "none" }} />

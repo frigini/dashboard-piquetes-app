@@ -3,7 +3,7 @@ import { T, STATUS } from "../theme/theme";
 import { Badge, Tag, MachineTag } from "../components/ui";
 import { exportPiquetePDF, exportPiqueteExcel } from "../utils/exportPiquete";
 
-const DashboardView = ({ filtered, analytics, updates, pct, today, persist, history, activeData, search, setSearch, fmtW, unitLabel }) => {
+const DashboardView = ({ filtered, analytics, updates, pct, today, persist, activeData, search, setSearch, fmtW, unitLabel }) => {
     const [expanded, setExpanded] = useState({});
 
     return (
@@ -124,24 +124,30 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, hist
                                         <thead>
                                             <tr style={{ background: "#0F0F0F" }}>
                                                 {["PRIO", "OV", "OP", "POSICAO", "MATERIAL", "QTD", `PESO ${unitLabel}`, "MAQ", "PENDENCIA"].map(h => (
-                                                    <th key={h} style={{ padding: "7px 12px", textAlign: "left", fontSize: 9, color: T.dim, letterSpacing: 1, borderBottom: `1px solid ${T.border}`, whiteSpace: "nowrap", fontWeight: 600 }}>{h}</th>
+                                                    <th key={h} style={{ padding: "7px 12px", textAlign: "center", fontSize: 9, color: T.dim, letterSpacing: 1, borderBottom: `1px solid ${T.border}`, whiteSpace: "nowrap", fontWeight: 600 }}>{h}</th>
                                                 ))}
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {(p.items || p.itens || []).map((it, idx) => (
                                                 <tr key={idx} className="row" style={{ borderBottom: `1px solid #151515` }}>
-                                                    <td style={{ padding: "6px 12px", color: T.red, fontWeight: 800, fontSize: 11 }}>{it.prio}</td>
-                                                    <td style={{ padding: "6px 12px", color: T.sub, fontSize: 10 }}>{it.ov}</td>
-                                                    <td style={{ padding: "6px 12px", color: T.dim, fontFamily: "monospace", fontSize: 9 }}>{it.op}</td>
-                                                    <td style={{ padding: "6px 12px", color: T.text, fontSize: 10 }}>{it.posicao}</td>
-                                                    <td style={{ padding: "6px 12px", color: T.sub, fontSize: 10, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.material || it.desc}</td>
-                                                    <td style={{ padding: "6px 12px", color: T.text, textAlign: "right", fontWeight: 600 }}>{it.qtd}</td>
-                                                    <td style={{ padding: "6px 12px", color: "#A78BFA", textAlign: "right", fontWeight: 600, fontFamily: "monospace" }}>{fmtW(it.peso || 0, 3)}</td>
-                                                    <td style={{ padding: "6px 12px" }}>
-                                                        <span style={{ color: "#38BDF8", background: "#071420", border: "1px solid #0369A1", borderRadius: 4, padding: "2px 8px", fontFamily: "monospace", fontSize: 9 }}>{it.maq}</span>
+                                                    <td style={{ padding: "6px 12px", color: T.red, fontWeight: 800, fontSize: 11, textAlign: "center" }}>{it.prio}</td>
+                                                    <td style={{ padding: "6px 12px", color: T.sub, fontSize: 10, textAlign: "center" }}>{it.ov}</td>
+                                                    <td style={{ padding: "6px 12px", color: T.dim, fontFamily: "monospace", fontSize: 9, textAlign: "center" }}>{it.op}</td>
+                                                    <td style={{ padding: "6px 12px", color: T.text, fontSize: 10, textAlign: "center" }}>{it.posicao}</td>
+                                                    <td style={{ padding: "6px 12px", color: T.sub, fontSize: 10, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center" }}>{it.material || it.desc}</td>
+                                                    <td style={{ padding: "6px 12px", color: T.text, textAlign: "center", fontWeight: 600 }}>{it.qtd}</td>
+                                                    <td style={{ padding: "6px 12px", color: "#A78BFA", textAlign: "center", fontWeight: 600, fontFamily: "monospace" }}>{fmtW(it.peso || 0, 3)}</td>
+                                                    <td style={{ padding: "6px 12px", textAlign: "center" }}>
+                                                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                                            <span style={{ color: "#38BDF8", background: "#071420", border: "1px solid #0369A1", borderRadius: 4, padding: "2px 8px", fontFamily: "monospace", fontSize: 9 }}>{it.maq}</span>
+                                                        </div>
                                                     </td>
-                                                    <td style={{ padding: "6px 12px" }}>{(it.pendencia || it.etapa) && (it.pendencia || it.etapa) !== "Finalizado" && (it.pendencia || it.etapa) !== "-" && <Tag label={it.pendencia || it.etapa} />}</td>
+                                                    <td style={{ padding: "6px 12px", textAlign: "center" }}>
+                                                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                                            {(it.pendencia || it.etapa) && (it.pendencia || it.etapa) !== "Finalizado" && (it.pendencia || it.etapa) !== "-" && <Tag label={it.pendencia || it.etapa} />}
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
