@@ -4,17 +4,36 @@ export default function useAnalytics(data, updates, pendF, maqF) {
     return useMemo(() => {
         const baseDateString = (d) => {
             if (!d) return null;
-            if (d.includes('/')) return d.substring(0, 10);
+            if (typeof d === "string") {
+                if (d.includes('/')) return d.substring(0, 10);
+                return new Date(d).toLocaleDateString("pt-BR");
+            }
+            if (typeof d === "number") {
+                // Conversão de data serial do Excel para JS (considerando base 1900)
+                const jsDate = new Date((d - 25569) * 86400 * 1000);
+                return jsDate.toLocaleDateString("pt-BR");
+            }
             return new Date(d).toLocaleDateString("pt-BR");
         };
 
         const calcStatus = (p) => {
-            if (updates[p.id]?.status) return updates[p.id].status;
-            const op = (p.status_op || "").toUpperCase();
+            if (updates && updates[p.id]?.status) return updates[p.id].status;
+            
             const sit = (p.situacao || "").toUpperCase();
-            if (op === "ENCERRADO" || sit === "FINALIZADO" || sit === "ENCER") return "CONCLUÍDO";
+            if (sit === "FINALIZADO") return "CONCLUÍDO";
 
-            // Se não tem pendências reais, está concluído
+            const items = p.items || p.itens || [];
+            if (items.length > 0) {
+                const allFinished = items.every(i => {
+                    const et = String(i.etapa || "").trim().toUpperCase();
+                    return et === "FINALIZADO" || et === "CONCLUÍDO";
+                });
+                return allFinished ? "CONCLUÍDO" : "EM PROGRESSO";
+            }
+
+            const op = (p.status_op || "").toUpperCase();
+            if (op === "ENCERRADO" || sit === "ENCER") return "CONCLUÍDO";
+
             const hasPend = p.pendencias && p.pendencias.length > 0 &&
                 p.pendencias.some(x => x && x.trim() !== "" && x !== "-" && x !== "—" && x.toUpperCase() !== "FINALIZADO");
 
@@ -108,8 +127,12 @@ export default function useAnalytics(data, updates, pendF, maqF) {
             return new Date(`${pa[2]}-${pa[1]}-${pa[0]}`) - new Date(`${pb[2]}-${pb[1]}-${pb[0]}`);
         });
 
+        const evo = [];
         let cum = 0;
-        const evo = evoKeys.map(d => { cum += dayMap[d]; return { d, v: cum }; });
+        for (const d of evoKeys) {
+            cum += dayMap[d];
+            evo.push({ d, v: cum });
+        }
 
         const totalPeso = all.reduce((a, p) => a + (p.peso_apto_kg || p.peso_kg || 0), 0);
         return { total: all.length, concl, prog, conclPeso, progPeso, open, pendC, pendW, gPend, gMaq, esforco, topPeso, evo, totalPeso, pendPeso, pendPos };

@@ -3,7 +3,7 @@ import { T, STATUS } from "../theme/theme";
 import { Badge, Tag, MachineTag } from "../components/ui";
 import { exportPiquetePDF, exportPiqueteExcel } from "../utils/exportPiquete";
 
-const DashboardView = ({ filtered, analytics, updates, pct, today, persist, activeData, search, setSearch, fmtW, unitLabel }) => {
+const DashboardView = ({ filtered, analytics, updates, pct, activeData, search, setSearch, fmtW, unitLabel }) => {
     const [expanded, setExpanded] = useState({});
 
     return (
@@ -75,16 +75,18 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, acti
                             <div style={{ padding: "14px 18px", display: "flex", alignItems: "flex-start", gap: 14 }}>
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 5 }}>
-                                        <span style={{ color: T.red, fontWeight: 900, fontSize: 14, letterSpacing: .5 }}>CT {p.ct}</span>
+                                        <span style={{ color: T.red, fontWeight: 900, fontSize: 14, letterSpacing: .5 }}>{p.piquete}</span>
                                         <span style={{ color: T.border }}>│</span>
-                                        <span style={{ color: T.dim, fontSize: 10 }}>{p.sheet === "PRÓXIMOS" ? "PROXIMOS" : "PIQ. BRASA"}</span>
+                                        <span style={{ color: T.dim, fontSize: 10 }}>CT {p.ct}</span>
                                         <span style={{ color: T.border }}>│</span>
                                         <span style={{ color: "#A78BFA", fontWeight: 700, fontSize: 11 }}>{fmtW(p.peso_apto_kg || p.peso_kg || 0, 2)}</span>
                                         {u.status && <Badge label={u.status} />}
                                         <span style={{ marginLeft: "auto", fontSize: 9, color: T.dim }}>{u.updatedAt && `↻ ${u.updatedAt}`}</span>
                                     </div>
 
-                                    <div style={{ color: T.sub, fontSize: 10, marginBottom: 8, fontFamily: "monospace", letterSpacing: .3, wordBreak: "break-all" }}>{p.piquete}</div>
+                                    <div style={{ color: T.sub, fontSize: 10, marginBottom: 8, fontFamily: "monospace", letterSpacing: .3, wordBreak: "break-all" }}>
+                                        {p.sheet === "PRÓXIMOS" ? "PROXIMOS" : "PIQ. BRASA"}
+                                    </div>
 
                                     <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
                                         {p.pendencias.map(pd => <Tag key={pd} label={pd} />)}
@@ -95,7 +97,7 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, acti
                                     {(u.responsavel || u.obs) && (
                                         <div style={{ display: "flex", gap: 14, marginTop: 8, flexWrap: "wrap" }}>
                                             {u.responsavel && <span style={{ color: T.sub, fontSize: 10 }}>👤 {u.responsavel}</span>}
-                                            {u.obs && <span style={{ color: T.dim, fontSize: 10, fontStyle: "italic" }}>"{u.obs.slice(0, 80)}"</span>}
+                                            {u.obs && <span style={{ color: T.dim, fontSize: 10, fontStyle: "italic" }}>"{String(u.obs || "").slice(0, 80)}"</span>}
                                         </div>
                                     )}
                                 </div>
@@ -123,7 +125,7 @@ const DashboardView = ({ filtered, analytics, updates, pct, today, persist, acti
                                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                         <thead>
                                             <tr style={{ background: "#0F0F0F" }}>
-                                                {["PRIO", "OV", "OP", "POSICAO", "MATERIAL", "QTD", `PESO ${unitLabel}`, "MAQ", "PENDENCIA"].map(h => (
+                                                {["PLANO GAL", "ORDEM VENDA", "ORDEM", "DESC COMPONENTE", "BITOLA", "QTD", `PESO ${unitLabel}`, "RECURSO", "ETAPA"].map(h => (
                                                     <th key={h} style={{ padding: "7px 12px", textAlign: "center", fontSize: 9, color: T.dim, letterSpacing: 1, borderBottom: `1px solid ${T.border}`, whiteSpace: "nowrap", fontWeight: 600 }}>{h}</th>
                                                 ))}
                                             </tr>

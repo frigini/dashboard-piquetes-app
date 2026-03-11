@@ -1,34 +1,35 @@
 import { T, PEND, DP } from "../../theme/theme";
 
+const SideBtn = ({ label, k, icon, view, setView }) => (
+    <button onClick={() => setView(k)} style={{
+        display: "flex", alignItems: "center", gap: 10, width: "100%",
+        padding: "10px 14px", borderRadius: 7, marginBottom: 3, cursor: "pointer",
+        background: view === k ? T.redDark + "33" : "transparent",
+        border: `1px solid ${view === k ? T.red : "transparent"}`,
+        color: view === k ? "#fff" : T.sub, fontSize: 11, fontWeight: view === k ? 700 : 400,
+        transition: "all .15s", textAlign: "left"
+    }}>
+        <span style={{ fontSize: 14, width: 18, textAlign: "center" }}>{icon}</span>
+        <span>{label}</span>
+        {view === k && <span style={{ marginLeft: "auto", width: 3, height: 3, borderRadius: "50%", background: T.red }} />}
+    </button>
+);
+
 const Sidebar = ({
     view, setView, activeData, filtered,
     statusF, setStatusF,
     pendF, setPendF, allPends, pendSum,
     maqF, setMaqF, allMaqs,
 }) => {
-    const SideBtn = ({ label, k, icon }) => (
-        <button onClick={() => setView(k)} style={{
-            display: "flex", alignItems: "center", gap: 10, width: "100%",
-            padding: "10px 14px", borderRadius: 7, marginBottom: 3, cursor: "pointer",
-            background: view === k ? T.redDark + "33" : "transparent",
-            border: `1px solid ${view === k ? T.red : "transparent"}`,
-            color: view === k ? "#fff" : T.sub, fontSize: 11, fontWeight: view === k ? 700 : 400,
-            transition: "all .15s", textAlign: "left"
-        }}>
-            <span style={{ fontSize: 14, width: 18, textAlign: "center" }}>{icon}</span>
-            <span>{label}</span>
-            {view === k && <span style={{ marginLeft: "auto", width: 3, height: 3, borderRadius: "50%", background: T.red }} />}
-        </button>
-    );
 
     return (
         <aside style={{ width: 210, background: T.surface, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", flexShrink: 0 }}>
             <div style={{ flex: 1, overflowY: "auto", padding: "16px 10px" }}>
 
                 <div style={{ fontSize: 9, color: T.dim, letterSpacing: 3, padding: "0 6px", marginBottom: 8 }}>NAVEGACAO</div>
-                <SideBtn label="Dashboard" k="dash" icon="◈" />
-                <SideBtn label="Analise" k="analytics" icon="▲" />
-                <SideBtn label="Importar" k="import" icon="↑" />
+                <SideBtn label="Dashboard" k="dash" icon="◈" view={view} setView={setView} />
+                <SideBtn label="Analise" k="analytics" icon="▲" view={view} setView={setView} />
+                <SideBtn label="Importar" k="import" icon="↑" view={view} setView={setView} />
 
                 <div style={{ height: 1, background: T.border, margin: "16px 0" }} />
                 <div style={{ fontSize: 9, color: T.dim, letterSpacing: 3, padding: "0 6px", marginBottom: 8 }}>STATUS</div>

@@ -45,7 +45,7 @@ export default function App() {
         .row:hover{background:#1A1A1A!important}
       `}</style>
 
-      <Header analytics={analytics} pct={pct} today={data.today} timeStr={data.timeStr} unit={unit} setUnit={setUnit} fmtW={fmtW} />
+      <Header analytics={analytics} pct={pct} today={data.today} timeStr={data.timeStr} unit={unit} setUnit={setUnit} fmtW={fmtW} sitF={filters.sitF} setSitF={filters.setSitF} />
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <Sidebar
@@ -59,7 +59,7 @@ export default function App() {
         <main style={{ flex: 1, overflowY: "auto", background: T.black }}>
           {view === "analytics" && (
             <AnalyticsView
-              analytics={analytics} updates={data.updates} pct={pct}
+              analytics={analytics} pct={pct}
               setStatusF={filters.setStatusF}
               actPend={filters.actPend} setActPend={filters.setActPend}
               actMaq={filters.actMaq} setActMaq={filters.setActMaq}
@@ -82,8 +82,7 @@ export default function App() {
           {view === "dash" && (
             <DashboardView
               filtered={filters.filtered} analytics={analytics}
-              updates={data.updates} pct={pct} today={data.today}
-              persist={data.persist} activeData={data.activeData}
+              updates={data.updates} pct={pct} activeData={data.activeData}
               search={filters.search} setSearch={filters.setSearch}
               fmtW={fmtW} unitLabel={unitLabel}
             />

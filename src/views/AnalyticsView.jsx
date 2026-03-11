@@ -4,7 +4,11 @@ import { Tag, Ring, Donut } from "../components/ui";
 import { HBar, LineChart } from "../components/charts";
 import { exportAnalyticsPDF } from "../utils/exportPiquete";
 
-const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, setActMaq, setStatusF, setPendF, setMaqF, setView, fmtW, unitLabel }) => {
+const AnalyticsView = ({
+    analytics, pct, setStatusF,
+    actPend, setActPend, actMaq, setActMaq,
+    setPendF, setMaqF, setView, fmtW, unitLabel
+}) => {
     const [expRows, setExpRows] = useState({});
     const toggleRow = id => setExpRows(e => ({ ...e, [id]: !e[id] }));
     return (
@@ -189,7 +193,7 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                                     <tr key={p.id} className="row" onClick={() => toggleRow(p.id)} style={{ borderBottom: `1px solid ${T.border}`, cursor: "pointer" }}>
                                         <td style={{ padding: "9px 12px", fontSize: i < 3 ? 16 : 11, color: T.dim, textAlign: "center" }}>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}</td>
                                         <td style={{ padding: "9px 12px", color: T.red, fontWeight: 800, fontSize: 12, textAlign: "center" }}>{p.ct}</td>
-                                        <td style={{ padding: "9px 12px", color: T.sub, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 10, textAlign: "center" }}>{p.piquete?.slice(0, 38)}</td>
+                                        <td style={{ padding: "9px 12px", color: T.sub, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 10, textAlign: "center" }}>{String(p.piquete || "").slice(0, 38)}</td>
                                         <td style={{ padding: "9px 12px", color: T.text, textAlign: "center", fontWeight: 700 }}>
                                             <span style={{ cursor: "pointer" }}>{isExp ? "▲" : "▼"} {p.pos}</span>
                                         </td>
@@ -206,7 +210,7 @@ const AnalyticsView = ({ analytics, updates, pct, actPend, setActPend, actMaq, s
                                                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                                     <thead>
                                                         <tr style={{ background: "#111" }}>
-                                                            {["PRIO", "OV", "OP", "POSICAO", "MATERIAL", "QTD", `PESO ${unitLabel}`, "MAQ", "PENDENCIA"].map(h => (
+                                                            {["PLANO GAL", "ORDEM VENDA", "ORDEM", "DESC COMPONENTE", "BITOLA", "QTD", `PESO ${unitLabel}`, "RECURSO", "ETAPA"].map(h => (
                                                                 <th key={h} style={{ padding: "5px 10px", textAlign: "center", fontSize: 8, color: T.dim, letterSpacing: 1, borderBottom: `1px solid ${T.border}`, fontWeight: 600 }}>{h}</th>
                                                             ))}
                                                         </tr>

@@ -233,7 +233,6 @@ export function exportAnalyticsPDF(analytics, pct, unitLabel, fmtW) {
  */
 export function exportPiquetePDF(p, updates, unitLabel, fmtW) {
     try {
-        const u = (updates || {})[p.id] || {};
         const items = p.items || p.itens || [];
         const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
         const pageW = doc.internal.pageSize.getWidth();
@@ -260,9 +259,9 @@ export function exportPiquetePDF(p, updates, unitLabel, fmtW) {
 
         // Tabela de itens
         if (items.length > 0) {
-            const headers = ["PRIO", "OV", "OP", "POSICAO", "MATERIAL", "QTD", `PESO (${unitLabel})`, "MAQ", "PENDENCIA"];
+            const headers = ["PLANO GAL", "ORDEM VENDA", "ORDEM", "DESC COMPONENTE", "BITOLA", "QTD", `PESO (${unitLabel})`, "RECURSO", "ETAPA"];
             // Larguras das colunas (em mm) - total ~270mm para paisagem A4
-            const colW = [15, 18, 28, 22, 55, 15, 22, 25, 40];
+            const colW = [20, 20, 20, 50, 45, 12, 22, 25, 56];
             const startX = 14;
             const rowH = 6;
 
@@ -335,7 +334,6 @@ export function exportPiquetePDF(p, updates, unitLabel, fmtW) {
  */
 export function exportPiqueteExcel(p, updates, unitLabel, fmtW) {
     try {
-        const u = (updates || {})[p.id] || {};
         const items = p.items || p.itens || [];
         const wb = XLSX.utils.book_new();
 
@@ -356,7 +354,7 @@ export function exportPiqueteExcel(p, updates, unitLabel, fmtW) {
 
         // Aba Itens
         if (items.length > 0) {
-            const header = ["PRIO", "OV", "OP", "POSICAO", "MATERIAL", "QTD", `PESO (${unitLabel})`, "MAQ", "PENDENCIA"];
+            const header = ["PLANO GAL", "ORDEM VENDA", "ORDEM", "DESC COMPONENTE", "BITOLA", "QTD", `PESO (${unitLabel})`, "RECURSO", "ETAPA"];
             const rows = items.map(it => [
                 it.prio || "",
                 it.ov || "",

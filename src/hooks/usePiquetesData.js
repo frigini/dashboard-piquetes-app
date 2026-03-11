@@ -1,13 +1,41 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { read, utils } from "xlsx";
-import { PIQUETES_DATA } from "../data/piquetesData";
+
+const parseLocalNum = (v) => {
+    if (typeof v === 'number') return v;
+    let s = String(v || "").trim();
+    if (!s) return 0;
+    
+    const lastDot = s.lastIndexOf('.');
+    const lastComma = s.lastIndexOf(',');
+    
+    // Formato BR: 1.234,56 ou 1234,56
+    if (lastComma > lastDot) {
+        s = s.replace(/\./g, '').replace(',', '.');
+    } 
+    // Formato US: 1,234.56 ou 1234.56
+    else if (lastDot > lastComma) {
+        s = s.replace(/,/g, '');
+    }
+    return parseFloat(s) || 0;
+};
 
 export default function usePiquetesData() {
-    const [updates, setUpdates] = useState({});
+    const [updates, setUpdates] = useState(() => {
+        try {
+            const a = localStorage.getItem("piq_updates");
+            return a ? JSON.parse(a) : {};
+        } catch { return {}; }
+    });
     const [importedData, setImportedData] = useState([]);
     const [importStatus, setImportStatus] = useState(null);
     const [importDragging, setImportDragging] = useState(false);
-    const [dynData, setDynData] = useState(null);
+    const [dynData, setDynData] = useState(() => {
+        try {
+            const dyn = localStorage.getItem("piq_dyn");
+            return dyn ? JSON.parse(dyn) : null;
+        } catch { return null; }
+    });
     const [now, setNow] = useState(new Date());
 
     useEffect(() => {
@@ -18,35 +46,16 @@ export default function usePiquetesData() {
     const today = now.toLocaleDateString("pt-BR");
     const timeStr = now.toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' });
 
-    useEffect(() => {
-        const load = async () => {
-            try {
-                if (window.storage) {
-                    const a = await window.storage.get("piq_updates"); if (a) setUpdates(JSON.parse(a.value));
-                    const dyn = await window.storage.get("piq_dyn"); if (dyn) setDynData(JSON.parse(dyn.value));
-                } else {
-                    // Fallback para o localStorage nativo do navegador
-                    const a = localStorage.getItem("piq_updates"); if (a) setUpdates(JSON.parse(a));
-                    const dyn = localStorage.getItem("piq_dyn"); if (dyn) setDynData(JSON.parse(dyn));
-                }
-            } catch { }
-        };
-        load();
-    }, []);
-
     const persist = useCallback((u) => {
         setUpdates(u);
         try {
-            if (window.storage) {
-                window.storage.set("piq_updates", JSON.stringify(u));
-            } else {
-                // Fallback para o localStorage nativo do navegador
-                localStorage.setItem("piq_updates", JSON.stringify(u));
-            }
-        } catch { }
+            localStorage.setItem("piq_updates", JSON.stringify(u));
+        } catch (error) { 
+            console.warn("Storage save error", error); 
+        }
     }, []);
 
-    const activeData = dynData || PIQUETES_DATA;
+    const activeData = useMemo(() => dynData || [], [dynData]);
 
     // ─── IMPORTAR EXCEL OU CSV ───────────────────────────────────────────────────────
     const processFile = useCallback((file) => {
@@ -77,20 +86,21 @@ export default function usePiquetesData() {
                     let isGroupFormat = false;
 
                     for (let r = 0; r < Math.min(15, json.length); r++) {
-                        if (json[r].some(c => typeof c === 'string' && c.startsWith('CT '))) {
+                        if (json[r].some(c => typeof c === 'string' && c.includes('PIQUETE:') && c.includes('APTO:'))) {
                             isGroupFormat = true;
                             break;
                         }
                     }
 
                     if (isGroupFormat) {
+                        // Keep old legacy group formatting fallback just in case, but probably unused now
                         let currentPiqObj = null;
                         let gIdx = null;
 
                         for (let r = 0; r < json.length; r++) {
                             const row = json[r] || [];
 
-                            const titleCell = row.find(c => typeof c === 'string' && c.startsWith('CT '));
+                            const titleCell = row.find(c => typeof c === 'string' && c.includes('PIQUETE:') && c.includes('APTO:'));
                             if (titleCell) {
                                 const ctM = titleCell.match(/CT\s+(\w+)/);
                                 const piqM = titleCell.match(/PIQUETE:\s+(.+?)(?:\s+-|$)/);
@@ -104,11 +114,12 @@ export default function usePiquetesData() {
                                         ct: ctM ? ctM[1] : '-',
                                         piquete: piqueteName,
                                         descr: '',
-                                        peso_kg: pesoM ? parseFloat(pesoM[1].replace(',', '.')) || 0 : 0,
+                                        peso_kg: pesoM ? parseLocalNum(pesoM[1]) : 0,
                                         situacao: 'Aberto',
                                         status_op: 'Aberto',
                                         dt_contrat: '',
                                         ov: '',
+                                        tipo_ov: '',
                                         pendencias: new Set(),
                                         maquinas: new Set(),
                                         itens: [],
@@ -123,20 +134,20 @@ export default function usePiquetesData() {
 
                             const isHeader = row.some(c => typeof c === 'string' && c.trim().toUpperCase() === 'PENDÊNCIA');
                             if (isHeader) {
-                                gIdx = { ov: -1, cod_comp: -1, peso_comp: -1, maq: -1, etapa: -1, qtd: -1, prio: -1, op: -1, posicao: -1, material: -1 };
+                                gIdx = { ov: -1, cod_comp: -1, peso_comp: -1, maq: -1, etapa: -1, qtd: -1, prio: -1, op: -1, posicao: -1, material: -1, tipo_ov: -1 };
                                 row.forEach((c, i) => {
                                     if (typeof c === 'string') {
                                         const upper = c.trim().toUpperCase();
-                                        if (upper === 'MÁQ' || upper === 'MAQ') gIdx.maq = i;
-                                        if (upper === 'PENDÊNCIA' || upper === 'PENDENCIA') gIdx.etapa = i;
-                                        if (upper === 'COMP') gIdx.cod_comp = i;
-                                        if (upper === 'PESO') gIdx.peso_comp = i;
-                                        if (upper === 'OV') gIdx.ov = i;
-                                        if (upper === 'QTD') gIdx.qtd = i;
-                                        if (upper === 'PRIORIDADE' || upper === 'PRIO' || upper === 'PRIORI') gIdx.prio = i;
-                                        if (upper === 'OP') gIdx.op = i;
-                                        if (upper === 'POSIÇÃO' || upper === 'POSICAO' || upper === 'POS') gIdx.posicao = i;
-                                        if (upper === 'DESCRIÇÃO' || upper === 'DESCRICAO' || upper === 'MATERIAL' || upper === 'DESC' || upper.includes('DESCRI')) gIdx.material = i;
+                                        if (upper === 'MÁQ' || upper === 'MAQ' || upper === 'RECURSO') gIdx.maq = i;
+                                        if (upper === 'PENDÊNCIA' || upper === 'PENDENCIA' || upper === 'ETAPA ATUAL') gIdx.etapa = i;
+                                        if (upper === 'COMP' || upper === 'COMPRIMENTO') gIdx.cod_comp = i;
+                                        if (upper === 'PESO' || upper === 'PESO OP COMPONENTE') gIdx.peso_comp = i;
+                                        if (upper === 'OV' || upper === 'ORDEM VENDA') gIdx.ov = i;
+                                        if (upper === 'QTD' || upper === 'QTDE NECESSÁRIA' || upper === 'QTDE NECESSARIA') gIdx.qtd = i;
+                                        if (upper === 'PRIORIDADE' || upper === 'PRIO' || upper === 'PLANO GAL') gIdx.prio = i;
+                                        if (upper === 'OP' || upper === 'ORDEM') gIdx.op = i;
+                                        if (upper === 'POSIÇÃO' || upper === 'POSICAO' || upper === 'DESCRIÇÃO COMPONENTE' || upper === 'DESCRICAO COMPONENTE') gIdx.posicao = i;
+                                        if (upper === 'DESCRIÇÃO' || upper === 'DESCRICAO' || upper === 'MATERIAL' || upper === 'BITOLA') gIdx.material = i;
                                     }
                                 });
                                 continue;
@@ -168,7 +179,7 @@ export default function usePiquetesData() {
                                     cod: comp,
                                     desc: '',
                                     qtd: gIdx.qtd >= 0 ? parseInt(row[gIdx.qtd]) || 1 : 1,
-                                    peso: gIdx.peso_comp >= 0 ? parseFloat(String(row[gIdx.peso_comp] || 0).replace(',', '.')) || 0 : 0,
+                                    peso: gIdx.peso_comp >= 0 ? parseLocalNum(row[gIdx.peso_comp]) : 0,
                                     etapa: etapa,
                                     maq: maq
                                 });
@@ -178,24 +189,22 @@ export default function usePiquetesData() {
                         const header = json[0].map(h => typeof h === 'string' ? h.trim() : h);
                         const findIdx = (regexes) => header.findIndex(h => typeof h === 'string' && regexes.some(r => r.test(h)));
                         const idx = {
-                            plano: findIdx([/Plano GAL/i]),
-                            ct: findIdx([/Contrato/i, /^CT$/i]),
-                            piquete: findIdx([/Piquete/i]),
-                            descr: findIdx([/Descrição Embalagem/i, /Descr/i]),
-                            peso: findIdx([/Peso Piquete/i]),
-                            situacao: findIdx([/Situação Piquete/i, /Situacao/i]),
-                            status_op: findIdx([/Status OP/i]),
-                            dt: findIdx([/Data Contratual/i]),
-                            ov: findIdx([/Ordem Venda/i, /^OV$/i]),
-                            cod_comp: findIdx([/Cód\. Componente/i, /^COMP/i]),
-                            desc_comp: findIdx([/Descrição Componente/i, /Material/i, /Desc/i]),
-                            qtd: findIdx([/Qtde Necessária/i, /^QTD/i]),
-                            peso_comp: findIdx([/Peso OP Componente/i, /^PESO$/i]),
-                            etapa: findIdx([/Etapa Atual/i, /Pend/i]),
-                            prio: findIdx([/Prioridade/i, /^PRIO/i]),
-                            op: findIdx([/^OP$/i, /Ordem Produ/i]),
-                            posicao: findIdx([/Posi/i, /^POS/i]),
-                            maq: findIdx([/M.quina/i, /^MAQ/i])
+                            plano: findIdx([/^Plano GAL$/i]),
+                            ct: findIdx([/^Contrato$/i]),
+                            piquete: findIdx([/^Piquete$/i]),
+                            situacao: findIdx([/^Situação Piquete$/i, /^Situacao Piquete$/i]),
+                            tipo_ov: findIdx([/^Tipo de OV$/i]),
+                            ov: findIdx([/^Ordem Venda$/i]),
+                            posicao: findIdx([/^Descrição Componente$/i, /^Descricao Componente$/i]),
+                            cod_comp: findIdx([/^Comprimento$/i]),
+                            op: findIdx([/^Ordem$/i]),
+                            desc_comp: findIdx([/^Bitola$/i]),
+                            qtd: findIdx([/^Qtde Necessária$/i, /^Qtde Necess.ria$/i]),
+                            peso_comp: findIdx([/^Peso OP Componente$/i]),
+                            maq: findIdx([/^recurso$/i]),
+                            etapa: findIdx([/^Etapa Atual$/i]),
+                            // Ignore other columns entirely
+                            descr: -1, status_op: -1, dt: -1
                         };
 
                         if (idx.piquete === -1) throw new Error("Formato tabular não reconhecido. Cabeçalho 'Piquete' ausente.");
@@ -204,42 +213,58 @@ export default function usePiquetesData() {
                             const cols = json[i];
                             if (!cols || cols.length === 0) continue;
 
-                            const piq = cols[idx.piquete];
-                            if (!piq) continue;
-                            if (!piqMap[piq]) {
-                                piqMap[piq] = {
+                            const rawPiq = cols[idx.piquete];
+                            if (!rawPiq) continue;
+
+                            const situacao = idx.situacao >= 0 ? (cols[idx.situacao] || '') : '';
+                            
+                            // Agrupar apenas por Piquete para evitar duplicação em discrepâncias secundárias
+                            const piqKey = String(rawPiq).trim();
+
+                            if (!piqMap[piqKey]) {
+                                piqMap[piqKey] = {
                                     id: Object.keys(piqMap).length + 1,
-                                    plano: cols[idx.plano] || '-',
-                                    ct: cols[idx.ct] || '-',
-                                    piquete: piq,
-                                    descr: cols[idx.descr] || '',
-                                    peso_kg: parseFloat(String(cols[idx.peso] || 0).replace(',', '.')) || 0,
-                                    situacao: cols[idx.situacao] || '',
-                                    status_op: cols[idx.status_op] || '',
-                                    dt_contrat: cols[idx.dt] || '',
-                                    ov: cols[idx.ov] || '',
+                                    plano: idx.plano >= 0 ? (cols[idx.plano] || '-') : '-',
+                                    ct: idx.ct >= 0 ? (cols[idx.ct] || '-') : '-',
+                                    piquete: rawPiq,
+                                    descr: idx.descr >= 0 ? (cols[idx.descr] || '') : '',
+                                    peso_kg: 0, // Será somado a cada comp 
+                                    situacao: situacao,
+                                    status_op: idx.status_op >= 0 ? (cols[idx.status_op] || '') : '',
+                                    dt_contrat: idx.dt >= 0 ? (cols[idx.dt] || '') : '',
+                                    ov: idx.ov >= 0 ? (cols[idx.ov] || '') : '',
+                                    tipo_ov: idx.tipo_ov >= 0 ? (cols[idx.tipo_ov] || '') : '',
                                     pendencias: new Set(),
                                     maquinas: new Set(),
                                     itens: [],
                                 };
                             }
-                            const etapa = cols[idx.etapa] || '-';
-                            if (etapa && etapa !== 'Finalizado' && etapa !== '-') piqMap[piq].pendencias.add(etapa);
+                            
+                            const etapa = idx.etapa >= 0 ? (cols[idx.etapa] || '-') : '-';
+                            if (etapa && etapa !== 'Finalizado' && etapa !== '-') piqMap[piqKey].pendencias.add(etapa);
 
                             const maq = idx.maq >= 0 ? (cols[idx.maq] || '-') : '-';
-                            if (maq && maq !== '-') piqMap[piq].maquinas.add(maq);
+                            if (maq && maq !== '-') piqMap[piqKey].maquinas.add(maq);
 
-                            if (cols[idx.cod_comp]) {
-                                piqMap[piq].itens.push({
-                                    prio: idx.prio >= 0 ? String(cols[idx.prio] || "") : "",
+                            let pesoComp = 0;
+                            if (idx.peso_comp >= 0) {
+                                pesoComp = parseLocalNum(cols[idx.peso_comp]);
+                            }
+                            
+                            // Soma o peso do componente no peso do piquete agrupado
+                            piqMap[piqKey].peso_kg += pesoComp;
+
+                            if (idx.cod_comp >= 0 && cols[idx.cod_comp]) {
+                                piqMap[piqKey].itens.push({
+                                    prio: idx.plano >= 0 ? String(cols[idx.plano] || "") : "",
                                     ov: idx.ov >= 0 ? String(cols[idx.ov] || "") : "",
                                     op: idx.op >= 0 ? String(cols[idx.op] || "") : "",
                                     posicao: idx.posicao >= 0 ? String(cols[idx.posicao] || "") : "",
                                     material: idx.desc_comp >= 0 ? String(cols[idx.desc_comp] || "") : "",
                                     cod: cols[idx.cod_comp],
                                     desc: idx.desc_comp >= 0 ? String(cols[idx.desc_comp] || "") : "",
-                                    qtd: parseInt(cols[idx.qtd]) || 0,
-                                    peso: parseFloat(String(cols[idx.peso_comp] || 0).replace(',', '.')) || 0,
+                                    qtd: idx.qtd >= 0 ? (parseInt(cols[idx.qtd]) || 0) : 0,
+                                    peso: pesoComp,
                                     etapa,
                                     maq: idx.maq >= 0 ? String(cols[idx.maq] || "") : ""
                                 });
@@ -300,13 +325,10 @@ export default function usePiquetesData() {
 
         setDynData(mergedData);
         try {
-            if (window.storage) {
-                await window.storage.set("piq_dyn", JSON.stringify(mergedData));
-            } else {
-                // Fallback para o localStorage nativo do navegador
-                localStorage.setItem("piq_dyn", JSON.stringify(mergedData));
-            }
-        } catch { }
+            localStorage.setItem("piq_dyn", JSON.stringify(mergedData));
+        } catch (error) { 
+            console.warn("Storage update error", error); 
+        }
 
         setImportStatus({ type: "ok", msg: `✓ Processamos ${mergedData.length} piquetes (${importedData.length} atualizados/novos no dashboard)!` });
         setTimeout(() => setView("dash"), 1200);

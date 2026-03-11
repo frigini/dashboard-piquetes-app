@@ -1,6 +1,6 @@
 import { T, LOGO_SRC } from "../../theme/theme";
 
-const Header = ({ analytics, pct, today, timeStr, unit, setUnit, fmtW }) => (
+const Header = ({ analytics, pct, today, timeStr, unit, setUnit, fmtW, sitF, setSitF }) => (
     <header style={{
         background: `linear-gradient(135deg, ${T.redDark} 0%, ${T.red} 55%, ${T.redDark} 100%)`,
         padding: "0 28px", height: 70, display: "flex", alignItems: "center",
@@ -69,6 +69,53 @@ const Header = ({ analytics, pct, today, timeStr, unit, setUnit, fmtW }) => (
                     borderRadius: 4, padding: "2px 6px",
                     transition: "background .2s"
                 }}>Ton</span>
+            </button>
+            
+            {/* Botão Situação (Apto / Não Apto) */}
+            <button
+                onClick={() => {
+                    if (sitF === "TODAS") setSitF("APTO");
+                    else if (sitF === "APTO") setSitF("NÃO APTO");
+                    else setSitF("TODAS");
+                }}
+                style={{
+                    background: "rgba(0,0,0,.3)",
+                    border: "1px solid rgba(255,255,255,.25)",
+                    borderRadius: 8,
+                    padding: "6px 14px",
+                    color: "#fff",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    backdropFilter: "blur(8px)",
+                    boxShadow: "0 2px 8px rgba(0,0,0,.3)",
+                }}
+                title={`Filtro de Situação: ${sitF}`}
+            >
+                <span style={{ fontSize: 13 }}>📋</span>
+                <span style={{
+                    background: sitF === "TODAS" ? "rgba(255,255,255,.2)" : "transparent",
+                    borderRadius: 4, padding: "2px 6px",
+                    transition: "background .2s"
+                }}>Todos</span>
+                <span style={{ color: "rgba(255,255,255,.4)", fontSize: 10 }}>/</span>
+                <span style={{
+                    background: sitF === "APTO" ? "rgba(34, 197, 94, 0.4)" : "transparent",
+                    color: sitF === "APTO" ? "#A7F3D0" : "inherit",
+                    borderRadius: 4, padding: "2px 6px",
+                    transition: "background .2s, color .2s"
+                }}>Apto</span>
+                <span style={{ color: "rgba(255,255,255,.4)", fontSize: 10 }}>/</span>
+                <span style={{
+                    background: sitF === "NÃO APTO" ? "rgba(239, 68, 68, 0.4)" : "transparent",
+                    color: sitF === "NÃO APTO" ? "#FECACA" : "inherit",
+                    borderRadius: 4, padding: "2px 6px",
+                    transition: "background .2s, color .2s",
+                    whiteSpace: "nowrap"
+                }}>Ñ Apto</span>
             </button>
 
             <div style={{ textAlign: "right" }}>

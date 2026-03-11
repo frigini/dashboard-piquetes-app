@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 
 export default function useFilters(activeData, updates) {
     const [statusF, setStatusF] = useState("TODOS");
     const [pendF, setPendF] = useState("TODAS");
     const [maqF, setMaqF] = useState("TODAS");
+    const [sitF, setSitF] = useState("TODAS");
     const [search, setSearch] = useState("");
     const [actPend, setActPend] = useState(null);
     const [actMaq, setActMaq] = useState(null);
@@ -14,31 +15,59 @@ export default function useFilters(activeData, updates) {
         const c = {};
         activeData.forEach(p => {
             (p.items || p.itens || []).forEach(i => {
-                if (i.pendencia) c[i.pendencia] = (c[i.pendencia] || 0) + 1;
+                const pendName = i.etapa || i.pendencia;
+                if (pendName && pendName !== "-" && pendName.toUpperCase() !== "FINALIZADO") {
+                    c[pendName] = (c[pendName] || 0) + 1;
+                }
             });
         });
         return c;
     }, [activeData]);
 
     // Helper para determinar o status real no momento da filtragem
-    const calcStatus = (p) => {
+    const calcStatus = useCallback((p) => {
         if (updates && updates[p.id]?.status) return updates[p.id].status;
-        const op = (p.status_op || "").toUpperCase();
+        
         const sit = (p.situacao || "").toUpperCase();
-        if (op === "ENCERRADO" || sit === "FINALIZADO" || sit === "ENCER") return "CONCLUÍDO";
+        if (sit === "FINALIZADO") return "CONCLUÍDO";
+
+        const items = p.items || p.itens || [];
+        if (items.length > 0) {
+            const allFinished = items.every(i => {
+                const et = String(i.etapa || "").trim().toUpperCase();
+                return et === "FINALIZADO" || et === "CONCLUÍDO";
+            });
+            return allFinished ? "CONCLUÍDO" : "EM PROGRESSO";
+        }
+
+        const op = (p.status_op || "").toUpperCase();
+        if (op === "ENCERRADO" || sit === "ENCER") return "CONCLUÍDO";
 
         const hasPend = p.pendencias && p.pendencias.length > 0 &&
             p.pendencias.some(x => x && x.trim() !== "" && x !== "-" && x !== "—" && x.toUpperCase() !== "FINALIZADO");
 
         return hasPend ? "EM PROGRESSO" : "CONCLUÍDO";
-    };
+    }, [updates]);
+
+    // Filtro Situação (Apto / Não Apto)
+    const sitFiltered = useMemo(() =>
+        sitF === "TODAS"
+            ? activeData
+            : activeData.filter(p => {
+                const s = (p.situacao || "").toUpperCase();
+                if (sitF === "APTO") return s.includes("APTO") && !s.includes("NÃO APTO") && !s.includes("NAO APTO");
+                if (sitF === "NÃO APTO") return s.includes("NÃO APTO") || s.includes("NAO APTO");
+                return true;
+            }),
+        [activeData, sitF]
+    );
 
     // 1o Filtro: STATUS
     const statusFiltered = useMemo(() =>
         statusF === "TODOS"
-            ? activeData
-            : activeData.filter(p => calcStatus(p) === statusF),
-        [activeData, statusF, updates]
+            ? sitFiltered
+            : sitFiltered.filter(p => calcStatus(p) === statusF),
+        [sitFiltered, statusF, calcStatus]
     );
 
     // 2o Filtro: PENDENCIA (sobre o resultado do STATUS)
@@ -64,10 +93,12 @@ export default function useFilters(activeData, updates) {
     }), [pendFiltered, maqF, search]);
 
     // Reset filtros filhos quando o pai muda
+    const setSitFCascade = val => { setSitF(val); setStatusF("TODOS"); setPendF("TODAS"); setMaqF("TODAS"); };
     const setStatusFCascade = val => { setStatusF(val); setPendF("TODAS"); setMaqF("TODAS"); };
     const setPendFCascade = val => { setPendF(val); setMaqF("TODAS"); };
 
     return {
+        sitF, setSitF: setSitFCascade,
         statusF, setStatusF: setStatusFCascade,
         pendF, setPendF: setPendFCascade, maqF, setMaqF,
         search, setSearch, actPend, setActPend, actMaq, setActMaq,
